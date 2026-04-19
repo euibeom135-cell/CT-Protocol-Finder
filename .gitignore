@@ -1,0 +1,11 @@
+.env
+data/
+downloads/
+eval_results/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+server.log
+*.faiss
+*.pkl

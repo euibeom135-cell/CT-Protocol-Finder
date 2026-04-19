@@ -1,0 +1,3702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIH Protocol Finder — How It Works</title>
+<style>
+/* ============ BASE ============ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --muted: #64748b;
+  --bg: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary: #0891b2;
+  --primary-light: #cffafe;
+  --primary-dark: #0e7490;
+  --secondary: #7c3aed;
+  --secondary-light: #ede9fe;
+  --accent: #ec4899;
+  --accent-light: #fce7f3;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.15);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+}
+
+/* ============ LAYOUT ============ */
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+section { padding: 80px 0; }
+section + section { border-top: 1px solid var(--border); }
+
+h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -0.02em; }
+h2 {
+  font-size: 2em;
+  margin: 0 0 12px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+h2 .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #fff;
+  font-size: 0.85em;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.25);
+}
+.section-lead {
+  color: var(--muted);
+  font-size: 1.08em;
+  max-width: 680px;
+  margin: 0 0 36px 60px;
+}
+
+/* ============ TOP NAV ============ */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.topnav-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.topnav-brand {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 60%, var(--accent) 100%);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+}
+.topnav-links {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.topnav-links::-webkit-scrollbar { display: none; }
+.topnav-links a {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.88em;
+  padding: 8px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.topnav-links a:hover {
+  color: var(--ink);
+  background: var(--bg-subtle);
+}
+.topnav-links a.active {
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  font-weight: 600;
+}
+
+/* ============ HERO ============ */
+.hero {
+  position: relative;
+  padding: 90px 28px 100px;
+  color: #fff;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, rgba(236, 72, 153, 0.35), transparent 60%),
+    radial-gradient(900px 600px at -10% 40%, rgba(8, 145, 178, 0.5), transparent 60%),
+    linear-gradient(135deg, #0b1a2b 0%, #1a1b3a 60%, #2a0e3f 100%);
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+}
+.hero-inner {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cffafe;
+  margin-bottom: 24px;
+}
+.eyebrow-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 12px #22d3ee;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.hero h1 {
+  font-size: clamp(2.4em, 5vw, 4em);
+  margin: 0 0 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #cffafe 40%, #e0cfff 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  max-width: 780px;
+}
+.hero-tagline {
+  font-size: 1.2em;
+  color: #b8c5e0;
+  max-width: 620px;
+  margin: 0 0 40px;
+}
+.hero-tagline strong { color: #ffffff; font-weight: 600; }
+
+/* Animated Hero Pipeline SVG */
+.hero-pipeline {
+  margin-top: 20px;
+  width: 100%;
+  height: 140px;
+  overflow: visible;
+}
+.hero-pipeline .node rect,
+.hero-pipeline .node circle {
+  fill: rgba(255,255,255,0.08);
+  stroke: rgba(255,255,255,0.3);
+  stroke-width: 1.5;
+}
+.hero-pipeline .node.glow rect,
+.hero-pipeline .node.glow circle {
+  fill: rgba(8, 145, 178, 0.4);
+  stroke: #22d3ee;
+  filter: drop-shadow(0 0 8px #22d3ee);
+}
+.hero-pipeline text {
+  fill: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  font-family: -apple-system, sans-serif;
+}
+.hero-pipeline .sub {
+  fill: #b8c5e0;
+  font-size: 9px;
+  font-weight: 400;
+}
+.hero-pipeline .link {
+  stroke: rgba(255,255,255,0.2);
+  stroke-width: 2;
+  fill: none;
+}
+.hero-pipeline .packet {
+  fill: #22d3ee;
+  filter: drop-shadow(0 0 6px #22d3ee);
+}
+
+.hero-cta {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 0.95em;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: #fff;
+  color: var(--ink);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* ============ STATS BAND ============ */
+.stats {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 32px 0;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat {
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+.stat-num {
+  font-size: 2.2em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.stat-label {
+  color: var(--muted);
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-top: 8px;
+}
+@media (max-width: 720px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: none; }
+}
+
+/* ============ BIG PICTURE ============ */
+.bp-figure-wrap {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px 20px;
+  margin-left: 60px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.bp-figure {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  display: block;
+}
+.big-picture-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  margin-left: 60px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.big-picture-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary), var(--secondary), var(--accent));
+}
+.big-picture-card p {
+  font-size: 1.05em;
+  color: var(--ink-2);
+  margin: 0 0 12px;
+}
+.big-picture-card p:last-child { margin-bottom: 0; }
+.big-picture-card strong { color: var(--ink); }
+
+/* ============ QUERY JOURNEY ============ */
+.journey-wrap {
+  margin-left: 60px;
+}
+.journey {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px;
+}
+.journey-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.step {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.15s;
+  position: relative;
+}
+.step::after {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 100%;
+  width: 2px;
+  height: 8px;
+  background: var(--border);
+}
+.step:last-child::after { display: none; }
+.step:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+.step.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-light) 200%);
+}
+.step-num {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.88em;
+  transition: all 0.15s;
+}
+.step.active .step-num {
+  background: var(--primary);
+  color: #fff;
+}
+.step-icon {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.step-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--muted);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.15s;
+}
+.step.active .step-icon {
+  background: var(--primary-light);
+}
+.step.active .step-icon svg {
+  stroke: var(--primary-dark);
+}
+.step-label {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.94em;
+  flex: 1;
+}
+.step-detail {
+  background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.step-detail-num {
+  font-size: 6em;
+  font-weight: 900;
+  color: var(--bg-subtle);
+  position: absolute;
+  top: -20px;
+  right: 20px;
+  line-height: 1;
+  z-index: 0;
+}
+.step-detail-content { position: relative; z-index: 1; }
+.step-detail h3 {
+  margin: 0 0 8px;
+  font-size: 1.5em;
+  color: var(--ink);
+}
+.step-detail .file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-subtle);
+  color: var(--primary-dark);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.82em;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.step-detail p { color: var(--ink-2); font-size: 0.98em; }
+.step-detail .example {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9em;
+  color: var(--ink-2);
+  font-style: italic;
+}
+@media (max-width: 860px) {
+  .journey { grid-template-columns: 1fr; }
+}
+
+/* ============ ARCHITECTURE MAP ============ */
+.arch-wrap {
+  margin-left: 60px;
+  background: linear-gradient(135deg, #0b1a2b 0%, #1a1b3a 100%);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.arch-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+.arch-svg {
+  position: relative;
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+}
+.arch-legend {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  color: #cbd5e1;
+  font-size: 0.85em;
+}
+.arch-legend .swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ============ ARCHITECTURE TABS ============ */
+.arch-tabs {
+  display: flex;
+  gap: 6px;
+  margin-left: 60px;
+  margin-bottom: 16px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.arch-tabs::-webkit-scrollbar { display: none; }
+.arch-tab {
+  flex: 1;
+  min-width: fit-content;
+  padding: 11px 18px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.88em;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  font-family: inherit;
+  text-align: left;
+  letter-spacing: 0.01em;
+}
+.arch-tab:hover {
+  background: var(--bg-subtle);
+  color: var(--ink);
+}
+.arch-tab.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.25);
+}
+.arch-tab .tab-letter {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  color: inherit;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 20px;
+  font-size: 0.78em;
+  margin-right: 8px;
+  font-weight: 800;
+}
+.arch-tab.active .tab-letter { background: rgba(255,255,255,0.25); }
+.arch-tab:not(.active) .tab-letter {
+  background: var(--bg-subtle);
+  color: var(--muted);
+}
+
+.arch-panel { display: none; }
+.arch-panel.active { display: block; }
+
+.arch-caption {
+  margin: 18px 0 0 60px;
+  padding: 18px 26px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  font-size: 0.92em;
+  color: var(--ink-2);
+  line-height: 1.65;
+  box-shadow: var(--shadow-sm);
+}
+.arch-caption .fig-label {
+  color: var(--primary-dark);
+  font-weight: 800;
+  margin-right: 8px;
+}
+.arch-caption code {
+  background: var(--bg-subtle);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.88em;
+}
+
+/* ============ FILE GRID ============ */
+.files-wrap { margin-left: 60px; }
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.pill {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pill:hover { border-color: var(--primary); color: var(--primary-dark); }
+.pill.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.file-tile {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.file-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--tile-color, var(--primary));
+  opacity: 0.8;
+}
+.file-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--tile-color, var(--primary));
+}
+.file-tile.hidden { display: none; }
+.file-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.file-badge-icon {
+  flex: 0 0 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--tile-color, var(--primary));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.78em;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.file-name {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--ink);
+  font-weight: 600;
+  word-break: break-all;
+}
+.file-role {
+  color: var(--muted);
+  font-size: 0.74em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.file-desc {
+  color: var(--ink-2);
+  font-size: 0.9em;
+  margin: 0;
+}
+.file-tile .expand-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.file-tile.expanded .expand-content {
+  max-height: 400px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.file-tile .expand-content p {
+  font-size: 0.88em;
+  color: var(--ink-2);
+  margin: 8px 0;
+}
+
+/* ============ FIH TAXONOMY ============ */
+.taxonomy-wrap {
+  margin-left: 60px;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.donut-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+.donut-svg { width: 100%; max-width: 300px; height: auto; }
+.donut-segment {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.donut-segment:hover { stroke-width: 36; }
+.donut-segment.active { stroke-width: 40; }
+.donut-center {
+  text-anchor: middle;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.donut-center-label {
+  text-anchor: middle;
+  font-size: 11px;
+  fill: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tax-detail {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+}
+.tax-detail h3 {
+  margin: 0 0 4px;
+  font-size: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tax-detail .weight-big {
+  font-size: 0.65em;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: var(--tile-color);
+  color: #fff;
+  font-weight: 700;
+}
+.tax-detail p { color: var(--ink-2); margin: 8px 0 16px; }
+.tax-detail .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tax-detail .tag {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-family: var(--mono);
+}
+@media (max-width: 820px) {
+  .taxonomy-wrap { grid-template-columns: 1fr; }
+}
+
+/* ============ SIMILARITY CALCULATOR ============ */
+.sim-wrap {
+  margin-left: 60px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  box-shadow: var(--shadow);
+}
+.sim-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 80px;
+  gap: 20px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sim-row:last-of-type { border-bottom: none; }
+.sim-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sim-label strong { color: var(--ink); font-size: 0.95em; }
+.sim-label small {
+  color: var(--muted);
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.sim-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 100px;
+  background: var(--bg-subtle);
+  outline: none;
+}
+.sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--primary);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.sim-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--primary);
+  cursor: pointer;
+}
+.sim-value {
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
+}
+.sim-total {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.sim-total-label {
+  font-size: 0.9em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.sim-total-bar {
+  flex: 1;
+  height: 28px;
+  background: var(--bg-subtle);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+.sim-total-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 60%, var(--accent) 100%);
+  border-radius: 100px;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+.sim-total-num {
+  font-size: 1.8em;
+  font-weight: 800;
+  font-family: var(--mono);
+  min-width: 90px;
+  text-align: right;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sim-note {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--warning-light);
+  border-left: 4px solid var(--warning);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9em;
+  color: var(--ink-2);
+}
+.sim-note strong { color: var(--warning); }
+
+/* ============ TECH STACK ============ */
+.stack-wrap { margin-left: 60px; }
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.tech-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: all 0.2s;
+  cursor: default;
+}
+.tech-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+}
+.tech-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  margin-bottom: 12px;
+}
+.tech-icon svg { width: 22px; height: 22px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tech-name { font-weight: 700; color: var(--ink); font-size: 0.98em; }
+.tech-role { color: var(--muted); font-size: 0.85em; margin-top: 4px; }
+
+/* ============ GLOSSARY ============ */
+.glossary-wrap { margin-left: 60px; }
+.glossary-search {
+  width: 100%;
+  max-width: 480px;
+  padding: 14px 20px 14px 46px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 1em;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 16px center;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.glossary-search:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.gloss-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: all 0.15s;
+}
+.gloss-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+.gloss-card.hidden { display: none; }
+.gloss-term {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 4px;
+  font-size: 0.98em;
+}
+.gloss-def { color: var(--ink-2); font-size: 0.88em; margin: 0; }
+
+/* ============ FOOTER ============ */
+.footer {
+  background: #0b1a2b;
+  color: #94a3b8;
+  padding: 40px 0 60px;
+  text-align: center;
+  font-size: 0.88em;
+}
+.footer a { color: #22d3ee; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer-brand {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ============ BACK TO TOP ============ */
+.back-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 50;
+}
+.back-top.visible { opacity: 1; pointer-events: auto; }
+.back-top:hover { background: var(--primary); transform: translateY(-3px); }
+
+/* ============ SIMILARITY METRIC SECTION ============ */
+.sm-wrap { margin-left: 60px; }
+
+/* Layer A — composite bar */
+.sm-composite {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.sm-composite-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.sm-composite-header .sm-score-big {
+  font-size: 2.2em;
+  font-weight: 800;
+  font-family: var(--mono);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.sm-composite-header .sm-label-big {
+  font-size: 1.05em;
+  color: var(--ink-2);
+}
+.sm-bar-track {
+  width: 100%;
+  height: 18px;
+  background: var(--bg-subtle);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.sm-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+/* Layer B — 4 axis rows */
+.sm-axes {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.sm-axis-row {
+  display: grid;
+  grid-template-columns: 200px auto 1fr 70px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sm-axis-row:last-child { border-bottom: none; }
+.sm-axis-name {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.95em;
+}
+.sm-axis-question {
+  color: var(--muted);
+  font-size: 0.85em;
+  font-style: italic;
+  grid-column: 1 / -1;
+  margin-top: -4px;
+  padding-bottom: 4px;
+}
+.sm-weight-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 100px;
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.sm-axis-bar {
+  height: 12px;
+  background: var(--bg-subtle);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.sm-axis-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+.sm-axis-score {
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.95em;
+}
+
+/* Layer C — FIH sub-dimensions */
+.sm-fih-expand {
+  background: #fff;
+  border: 2px solid var(--secondary);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  position: relative;
+}
+.sm-fih-expand::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 60px;
+  width: 2px;
+  height: 14px;
+  background: var(--secondary);
+}
+.sm-fih-expand::after {
+  content: '';
+  position: absolute;
+  top: -18px;
+  left: 56px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--secondary);
+}
+.sm-fih-title {
+  font-weight: 700;
+  color: var(--secondary);
+  font-size: 1em;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sm-fih-subtitle {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin: 0 0 16px;
+}
+.sm-sub-row {
+  display: grid;
+  grid-template-columns: 160px 60px 1fr 60px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sm-sub-row:last-child { border-bottom: none; }
+.sm-sub-name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.88em;
+}
+.sm-sub-weight {
+  font-size: 0.75em;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.sm-sub-bar {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.sm-sub-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--secondary);
+}
+.sm-sub-score {
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.85em;
+}
+.sm-fih-note {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: var(--secondary-light);
+  border-left: 3px solid var(--secondary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.85em;
+  color: var(--ink-2);
+}
+
+/* Layer D — worked example tile */
+.sm-worked {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 0;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+.sm-trial-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+}
+.sm-trial-card h4 {
+  margin: 0 0 4px;
+  font-size: 0.95em;
+  color: var(--ink);
+}
+.sm-trial-card .sm-nct {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  color: var(--primary-dark);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.sm-trial-card .sm-meta-item {
+  font-size: 0.85em;
+  color: var(--ink-2);
+  margin: 4px 0;
+}
+.sm-trial-label {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.sm-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--muted);
+  font-size: 1.1em;
+}
+
+/* Layer E — heatmap */
+.sm-heatmap-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.sm-heatmap-title {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 1.05em;
+  margin: 0 0 6px;
+}
+.sm-heatmap-desc {
+  color: var(--muted);
+  font-size: 0.88em;
+  margin: 0 0 18px;
+}
+.sm-heatmap-grid {
+  display: grid;
+  gap: 3px;
+}
+.sm-heatmap-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 0.72em;
+  font-family: var(--mono);
+  font-weight: 700;
+  cursor: default;
+  position: relative;
+  color: transparent;
+  transition: all 0.15s;
+}
+.sm-heatmap-cell:hover {
+  color: #fff;
+  transform: scale(1.1);
+  z-index: 2;
+  box-shadow: var(--shadow);
+}
+.sm-heatmap-cell.diag {
+  color: transparent;
+}
+.sm-heatmap-cell.diag:hover {
+  color: #fff;
+}
+.sm-heatmap-label {
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: right;
+  padding-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sm-heatmap-label-top {
+  font-size: 0.68em;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-self: center;
+  padding-bottom: 4px;
+  max-height: 90px;
+}
+.sm-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.78em;
+  color: var(--muted);
+}
+.sm-heatmap-legend-bar {
+  width: 180px;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #0891b2 50%, #7c3aed 100%);
+}
+
+/* Scope warning */
+.sm-scope-warning {
+  padding: 20px 24px;
+  background: var(--warning-light);
+  border-left: 4px solid var(--warning);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.92em;
+  color: var(--ink-2);
+  line-height: 1.65;
+}
+.sm-scope-warning strong { color: var(--warning); }
+
+/* ============ AGENT FLOW SECTION ============ */
+.af-wrap { margin-left: 60px; }
+.af-lanes {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.af-lane-key {
+  flex: 1;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.af-lane-scripted {
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+}
+.af-lane-ai {
+  background: var(--secondary-light);
+  border: 2px dashed var(--secondary);
+}
+.af-lane-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.af-lane-text {
+  font-size: 0.88em;
+  color: var(--ink-2);
+}
+.af-lane-text strong {
+  color: var(--ink);
+}
+
+.af-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.af-step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 16px;
+  padding-bottom: 0;
+  position: relative;
+}
+.af-step-num-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.af-step-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 0.95em;
+  flex-shrink: 0;
+  z-index: 2;
+}
+.af-step-line {
+  width: 2px;
+  flex: 1;
+  min-height: 16px;
+}
+.af-step-card {
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 12px;
+}
+.af-step-card.scripted {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+}
+.af-step-card.ai {
+  background: var(--secondary-light);
+  border: 1px dashed var(--secondary);
+}
+.af-step-card h4 {
+  margin: 0 0 4px;
+  font-size: 0.95em;
+  color: var(--ink);
+}
+.af-step-card p {
+  margin: 0;
+  font-size: 0.88em;
+  color: var(--ink-2);
+}
+
+.af-trust-box {
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: var(--success-light);
+  border: 1px solid var(--success);
+  border-radius: var(--radius);
+  font-size: 0.92em;
+  color: var(--ink-2);
+  line-height: 1.65;
+}
+.af-trust-box strong { color: #065f46; }
+
+/* ============ DEV APPENDIX ============ */
+.dev-appendix-summary {
+  cursor: pointer;
+  padding: 18px 28px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 0 0 20px 60px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dev-appendix-summary::-webkit-details-marker { display: none; }
+.dev-appendix-summary::before {
+  content: '>';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--border);
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.85em;
+  transition: transform 0.2s;
+}
+details[open] > .dev-appendix-summary::before {
+  transform: rotate(90deg);
+}
+.dev-appendix-summary:hover {
+  border-color: var(--primary);
+  color: var(--ink);
+}
+
+/* ============ MOBILE ============ */
+@media (max-width: 720px) {
+  .container { padding: 0 20px; }
+  section { padding: 60px 0; }
+  h2 { font-size: 1.6em; }
+  .section-lead, .big-picture-card, .journey-wrap, .arch-wrap, .files-wrap, .taxonomy-wrap, .sim-wrap, .stack-wrap, .glossary-wrap, .sm-wrap, .af-wrap { margin-left: 0; }
+  .big-picture-card, .sim-wrap { padding: 24px; }
+  .sim-row { grid-template-columns: 140px 1fr 60px; gap: 12px; }
+  .arch-wrap { padding: 24px; }
+  .sm-axis-row { grid-template-columns: 1fr; gap: 8px; }
+  .sm-sub-row { grid-template-columns: 1fr 50px 1fr 50px; }
+  .sm-worked { grid-template-columns: 1fr; gap: 12px; }
+  .sm-vs { padding: 8px 0; }
+  .af-lanes { flex-direction: column; }
+  .dev-appendix-summary { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- =========================== TOP NAV =========================== -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand">
+      <span class="brand-dot"></span>
+      FIH Protocol Finder
+    </div>
+    <div class="topnav-links">
+      <a href="#big-picture">Overview</a>
+      <a href="#similarity-metric">Similarity Score</a>
+      <a href="#agent-flow">AI Agent</a>
+      <a href="#taxonomy">FIH Dimensions</a>
+      <a href="#files">Files</a>
+      <a href="#stack">Stack</a>
+      <a href="#glossary">Glossary</a>
+    </div>
+  </div>
+</nav>
+
+<!-- =========================== HERO =========================== -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="eyebrow-pulse"></span> FIH Protocol Review Tool</span>
+    <h1>FIH Protocol Finder — how it works.</h1>
+    <p class="hero-tagline">
+      An AI-assisted tool for finding, scoring, and reviewing <strong>first-in-human</strong>
+      and dose-escalation protocols from ClinicalTrials.gov — built around a novel
+      7-dimension FIH design taxonomy.
+    </p>
+
+    <!-- Animated Hero Pipeline -->
+    <svg class="hero-pipeline" viewBox="0 0 1120 140" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="link-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#ec4899" stop-opacity="0.2"/>
+        </linearGradient>
+      </defs>
+
+      <!-- links -->
+      <path class="link" d="M 90 70 L 230 70" />
+      <path class="link" d="M 310 70 L 450 70" />
+      <path class="link" d="M 530 70 L 670 70" />
+      <path class="link" d="M 750 70 L 890 70" />
+      <path class="link" d="M 970 70 L 1100 70" />
+
+      <!-- nodes -->
+      <g class="node n0" transform="translate(50, 70)">
+        <circle r="40" />
+        <text y="4">FIH QUERY</text>
+        <text class="sub" y="18">you describe</text>
+      </g>
+      <g class="node n1" transform="translate(270, 70)">
+        <rect x="-40" y="-30" width="80" height="60" rx="10" />
+        <text y="0">LLM</text>
+        <text class="sub" y="14">parses intent</text>
+      </g>
+      <g class="node n2" transform="translate(490, 70)">
+        <rect x="-40" y="-30" width="80" height="60" rx="10" />
+        <text y="0">SEARCH</text>
+        <text class="sub" y="14">CT.gov API</text>
+      </g>
+      <g class="node n3" transform="translate(710, 70)">
+        <rect x="-40" y="-30" width="80" height="60" rx="10" />
+        <text y="0">SCORE</text>
+        <text class="sub" y="14">CP relevance</text>
+      </g>
+      <g class="node n4" transform="translate(930, 70)">
+        <rect x="-40" y="-30" width="80" height="60" rx="10" />
+        <text y="0">PROTOCOL</text>
+        <text class="sub" y="14">extract</text>
+      </g>
+      <g class="node n5" transform="translate(1080, 70)">
+        <circle r="32" />
+        <text y="4">ASSESS</text>
+      </g>
+
+      <!-- flowing packet -->
+      <circle class="packet" r="5">
+        <animateMotion dur="6s" repeatCount="indefinite" rotate="auto">
+          <mpath href="#flowpath" />
+        </animateMotion>
+      </circle>
+      <path id="flowpath" d="M 90 70 L 1080 70" fill="none" stroke="none" />
+    </svg>
+
+    <div class="hero-cta">
+      <a href="#similarity-metric" class="btn btn-primary">See how similarity works</a>
+      <a href="#glossary" class="btn btn-ghost">Jump to glossary</a>
+    </div>
+  </div>
+</header>
+
+<!-- =========================== STATS BAND =========================== -->
+<div class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-num">13</div>
+        <div class="stat-label">modules in the pipeline</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">7</div>
+        <div class="stat-label">FIH taxonomy dimensions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">20+</div>
+        <div class="stat-label">FIH design types recognized</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">86.5%</div>
+        <div class="stat-label">Baseline eval score</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================== BIG PICTURE =========================== -->
+<section id="big-picture">
+  <div class="container">
+    <h2><span class="num">01</span> The Big Picture</h2>
+    <p class="section-lead">
+      You describe a first-in-human study; the tool returns the most relevant dose-escalation protocols, ranked by clinical pharmacology value.
+    </p>
+    <div class="bp-figure-wrap">
+      <svg class="bp-figure" viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="bp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+          </marker>
+          <linearGradient id="bp-app-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#cffafe"/>
+            <stop offset="100%" stop-color="#ede9fe"/>
+          </linearGradient>
+        </defs>
+
+        <!-- LEFT: Question bubble -->
+        <g transform="translate(30, 40)">
+          <circle cx="70" cy="70" r="62" fill="#fce7f3" stroke="#ec4899" stroke-width="3"/>
+          <text x="70" y="96" text-anchor="middle" fill="#ec4899" font-size="68" font-weight="900">?</text>
+        </g>
+        <text x="100" y="200" text-anchor="middle" fill="#0f172a" font-size="15" font-weight="800">Your FIH question</text>
+        <text x="100" y="220" text-anchor="middle" fill="#64748b" font-size="12">in plain English</text>
+
+        <!-- Little quote bubble next to question -->
+        <g transform="translate(170, 50)">
+          <rect x="0" y="0" width="140" height="40" rx="8" fill="#fff" stroke="#ec4899" stroke-width="1.5"/>
+          <path d="M 10 40 L 4 48 L 14 40 Z" fill="#fff" stroke="#ec4899" stroke-width="1.5"/>
+          <text x="10" y="18" fill="#334155" font-size="9" font-style="italic">"first in human PK</text>
+          <text x="10" y="32" fill="#334155" font-size="9" font-style="italic">for oral small mol"</text>
+        </g>
+
+        <!-- Arrow 1 -->
+        <line x1="320" y1="120" x2="370" y2="120" stroke="#94a3b8" stroke-width="3" marker-end="url(#bp-arrow)"/>
+
+        <!-- MIDDLE: The App -->
+        <g transform="translate(380, 45)">
+          <rect width="200" height="150" rx="18" fill="url(#bp-app-grad)" stroke="#0891b2" stroke-width="3"/>
+          <rect y="0" width="200" height="8" rx="8" fill="#0891b2"/>
+
+          <!-- Gear 1 (big) -->
+          <g transform="translate(60, 65)">
+            <circle r="24" fill="#0891b2"/>
+            <circle r="9" fill="#cffafe"/>
+            <g fill="#0891b2">
+              <rect x="-4" y="-32" width="8" height="10"/>
+              <rect x="-4" y="22" width="8" height="10"/>
+              <rect x="-32" y="-4" width="10" height="8"/>
+              <rect x="22" y="-4" width="10" height="8"/>
+              <rect x="-24" y="-24" width="8" height="8" transform="rotate(45 -20 -20)"/>
+              <rect x="16" y="-24" width="8" height="8" transform="rotate(45 20 -20)"/>
+              <rect x="-24" y="16" width="8" height="8" transform="rotate(45 -20 20)"/>
+              <rect x="16" y="16" width="8" height="8" transform="rotate(45 20 20)"/>
+            </g>
+          </g>
+
+          <!-- Gear 2 (medium) -->
+          <g transform="translate(145, 100)">
+            <circle r="18" fill="#7c3aed"/>
+            <circle r="7" fill="#ede9fe"/>
+            <g fill="#7c3aed">
+              <rect x="-3" y="-24" width="6" height="8"/>
+              <rect x="-3" y="16" width="6" height="8"/>
+              <rect x="-24" y="-3" width="8" height="6"/>
+              <rect x="16" y="-3" width="8" height="6"/>
+            </g>
+          </g>
+
+          <!-- Gear 3 (small) -->
+          <g transform="translate(130, 45)">
+            <circle r="12" fill="#ec4899"/>
+            <circle r="4" fill="#fce7f3"/>
+            <g fill="#ec4899">
+              <rect x="-2" y="-17" width="4" height="6"/>
+              <rect x="-2" y="11" width="4" height="6"/>
+              <rect x="-17" y="-2" width="6" height="4"/>
+              <rect x="11" y="-2" width="6" height="4"/>
+            </g>
+          </g>
+        </g>
+        <text x="480" y="215" text-anchor="middle" fill="#0f172a" font-size="15" font-weight="800">FIH Protocol Finder</text>
+        <text x="480" y="234" text-anchor="middle" fill="#64748b" font-size="12">13 modules scoring FIH relevance</text>
+
+        <!-- Arrow 2 -->
+        <line x1="590" y1="120" x2="640" y2="120" stroke="#94a3b8" stroke-width="3" marker-end="url(#bp-arrow)"/>
+
+        <!-- RIGHT: Ranked results -->
+        <g transform="translate(650, 40)">
+          <!-- Result 1 -->
+          <rect x="0" y="0" width="210" height="30" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <circle cx="14" cy="15" r="6" fill="#7c3aed"/>
+          <text x="14" y="19" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">1</text>
+          <text x="28" y="20" fill="#0f172a" font-size="11" font-weight="700" font-family="monospace">NCT03721172</text>
+          <rect x="150" y="7" width="50" height="16" rx="8" fill="#10b981"/>
+          <text x="175" y="19" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">CP 92</text>
+
+          <!-- Result 2 -->
+          <rect x="0" y="40" width="210" height="30" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <circle cx="14" cy="55" r="6" fill="#7c3aed"/>
+          <text x="14" y="59" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">2</text>
+          <text x="28" y="60" fill="#0f172a" font-size="11" font-weight="700" font-family="monospace">NCT02829307</text>
+          <rect x="150" y="47" width="50" height="16" rx="8" fill="#10b981"/>
+          <text x="175" y="59" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">CP 88</text>
+
+          <!-- Result 3 -->
+          <rect x="0" y="80" width="210" height="30" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <circle cx="14" cy="95" r="6" fill="#7c3aed"/>
+          <text x="14" y="99" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">3</text>
+          <text x="28" y="100" fill="#0f172a" font-size="11" font-weight="700" font-family="monospace">NCT04121078</text>
+          <rect x="150" y="87" width="50" height="16" rx="8" fill="#10b981"/>
+          <text x="175" y="99" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">CP 85</text>
+
+          <!-- Result 4 -->
+          <rect x="0" y="120" width="210" height="30" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" opacity="0.7"/>
+          <circle cx="14" cy="135" r="6" fill="#7c3aed"/>
+          <text x="14" y="139" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">4</text>
+          <text x="28" y="140" fill="#0f172a" font-size="11" font-weight="700" font-family="monospace" opacity="0.85">NCT02527746</text>
+          <rect x="150" y="127" width="50" height="16" rx="8" fill="#f59e0b"/>
+          <text x="175" y="139" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">CP 71</text>
+        </g>
+        <text x="755" y="215" text-anchor="middle" fill="#0f172a" font-size="15" font-weight="800">Ranked FIH protocols</text>
+        <text x="755" y="234" text-anchor="middle" fill="#64748b" font-size="12">sorted by CP relevance</text>
+      </svg>
+    </div>
+    <div class="big-picture-card">
+      <p>
+        You describe the first-in-human study you're planning — drug modality, therapeutic
+        area, study design. The tool searches ClinicalTrials.gov for comparable
+        dose-escalation protocols, scores each one for clinical pharmacology relevance
+        (FIH/SAD/MAD designs, PK-rich endpoints, and appropriate modality are weighted
+        highest), and returns a ranked list with the most data-rich protocols on top.
+      </p>
+      <p>
+        You can preview any protocol — the tool extracts structured sections and tables
+        from the PDF and produces a CP-focused assessment (drug, design, PK elements,
+        dosing, enrollment). A separate similarity engine finds trials with comparable
+        designs across seven FIH-specific dimensions: PK question type, drug modality,
+        escalation method, population, route, DLT window, and PD biomarker readouts.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== HOW THE SIMILARITY SCORE IS BUILT =========================== -->
+<section id="similarity-metric">
+  <div class="container">
+    <h2><span class="num">02</span> How Trial-Design Similarity Is Measured</h2>
+    <p class="section-lead">
+      When you search for FIH trials with similar designs, the engine compares every candidate against your query
+      across four independent questions and merges them into one number. Here is exactly how that works,
+      using a real pair of trials.
+    </p>
+
+    <div class="sm-wrap">
+
+      <!-- SCOPE WARNING -->
+      <div class="sm-scope-warning" style="margin-bottom:24px;">
+        <strong>Scope:</strong> This is a trial-<em>design</em> similarity engine. It measures how similar
+        two trials are <strong>as studies</strong> (escalation method, population, route, etc.).
+        It does <strong>not</strong> measure whether two drugs are pharmacologically similar.
+        The axes a clinical pharmacology reviewer needs for FIH comparator selection &mdash; tox profile,
+        ADME, target/mechanism of action, drug-drug interactions, dose-selection basis &mdash; are not
+        in this engine. A separate drug-pharmacology similarity layer is planned.
+      </div>
+
+      <!-- LAYER A: Composite -->
+      <div class="sm-composite">
+        <div class="sm-composite-header">
+          <div class="sm-score-big">49%</div>
+          <div class="sm-label-big">
+            <strong>Overall similarity</strong><br>
+            How close are two trials across four questions
+          </div>
+        </div>
+        <div class="sm-bar-track">
+          <div class="sm-bar-fill" style="width:49%; background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 60%, var(--accent) 100%);"></div>
+        </div>
+      </div>
+
+      <!-- LAYER B: 4 Axes -->
+      <div class="sm-axes">
+        <!-- Axis 1: Drug mechanism -->
+        <div class="sm-axis-row">
+          <div class="sm-axis-name">Drug mechanism</div>
+          <div><span class="sm-weight-badge" style="background:var(--primary);">30%</span></div>
+          <div class="sm-axis-bar"><div class="sm-axis-bar-fill" style="width:50%; background:var(--primary);"></div></div>
+          <div class="sm-axis-score">50%</div>
+        </div>
+        <div class="sm-axis-question">Are the drugs in the same mechanism family?</div>
+
+        <!-- Axis 2: FIH design -->
+        <div class="sm-axis-row">
+          <div class="sm-axis-name">FIH design</div>
+          <div><span class="sm-weight-badge" style="background:var(--secondary);">30%</span></div>
+          <div class="sm-axis-bar"><div class="sm-axis-bar-fill" style="width:58%; background:var(--secondary);"></div></div>
+          <div class="sm-axis-score">58%</div>
+        </div>
+        <div class="sm-axis-question">Do the trials use the same kind of study design?</div>
+
+        <!-- Axis 3: Therapeutic area -->
+        <div class="sm-axis-row">
+          <div class="sm-axis-name">Therapeutic area</div>
+          <div><span class="sm-weight-badge" style="background:var(--warning);">25%</span></div>
+          <div class="sm-axis-bar"><div class="sm-axis-bar-fill" style="width:30%; background:var(--warning);"></div></div>
+          <div class="sm-axis-score">30%</div>
+        </div>
+        <div class="sm-axis-question">Are the trials in the same disease area?</div>
+
+        <!-- Axis 4: Word similarity -->
+        <div class="sm-axis-row">
+          <div class="sm-axis-name">Word similarity</div>
+          <div><span class="sm-weight-badge" style="background:var(--success);">15%</span></div>
+          <div class="sm-axis-bar"><div class="sm-axis-bar-fill" style="width:63%; background:var(--success);"></div></div>
+          <div class="sm-axis-score">63%</div>
+        </div>
+        <div class="sm-axis-question">Do the trial descriptions use similar words?</div>
+      </div>
+
+      <!-- LAYER C: FIH sub-dimensions -->
+      <div class="sm-fih-expand">
+        <div class="sm-fih-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          FIH design breakdown &mdash; 7 sub-dimensions
+        </div>
+        <p class="sm-fih-subtitle">
+          Similarity = how many tags match out of all tags used (Jaccard index).
+        </p>
+
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">PK question type</div>
+          <div class="sm-sub-weight">25%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:50%;"></div></div>
+          <div class="sm-sub-score">50%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">Drug modality</div>
+          <div class="sm-sub-weight">20%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:100%;"></div></div>
+          <div class="sm-sub-score">100%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">Escalation method</div>
+          <div class="sm-sub-weight">15%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:50%;"></div></div>
+          <div class="sm-sub-score">50%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">Population</div>
+          <div class="sm-sub-weight">15%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:0%;"></div></div>
+          <div class="sm-sub-score">0%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">Route</div>
+          <div class="sm-sub-weight">10%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:100%;"></div></div>
+          <div class="sm-sub-score">100%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">DLT window</div>
+          <div class="sm-sub-weight">8%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:50%;"></div></div>
+          <div class="sm-sub-score">50%</div>
+        </div>
+        <div class="sm-sub-row">
+          <div class="sm-sub-name">PD biomarkers</div>
+          <div class="sm-sub-weight">7%</div>
+          <div class="sm-sub-bar"><div class="sm-sub-bar-fill" style="width:50%;"></div></div>
+          <div class="sm-sub-score">50%</div>
+        </div>
+
+        <div class="sm-fih-note">
+          The engine currently averages these 7 into one number internally.
+          A planned fix will expose all 7 individually so reviewers can see
+          which design dimensions drive the match and which diverge.
+        </div>
+      </div>
+
+      <!-- LAYER D: Worked example tile -->
+      <div class="sm-worked">
+        <div class="sm-trial-card">
+          <span class="sm-trial-label" style="background:var(--primary-light); color:var(--primary-dark);">Query trial</span>
+          <div class="sm-nct">NCT04176224</div>
+          <h4>Clinical Pharmacology Study of Oral Edaravone in Patients With ALS</h4>
+          <div class="sm-meta-item"><strong>Phase:</strong> 1</div>
+          <div class="sm-meta-item"><strong>Route:</strong> Oral</div>
+          <div class="sm-meta-item"><strong>Population:</strong> Japanese ALS patients</div>
+        </div>
+        <div class="sm-vs">vs.</div>
+        <div class="sm-trial-card">
+          <span class="sm-trial-label" style="background:var(--secondary-light); color:var(--secondary);">Top match</span>
+          <div class="sm-nct">NCT03383614</div>
+          <h4>Safety, Tolerability and PK of Multiple-ascending Doses of Emodepside</h4>
+          <div class="sm-meta-item"><strong>Phase:</strong> 1</div>
+          <div class="sm-meta-item"><strong>Route:</strong> Oral</div>
+          <div class="sm-meta-item"><strong>Population:</strong> Filariasis (healthy volunteers)</div>
+        </div>
+      </div>
+
+      <!-- LAYER E: Heatmap -->
+      <div class="sm-heatmap-wrap">
+        <div class="sm-heatmap-title">Pairwise similarity across 6 real trials</div>
+        <p class="sm-heatmap-desc">
+          Each cell shows how similar two trials are by overall composite score.
+          Darker cells = higher similarity. Hover to see the exact score.
+        </p>
+        <div class="sm-heatmap-grid" id="sm-heatmap" style="grid-template-columns: 130px repeat(6, 1fr); grid-template-rows: auto repeat(6, 1fr);">
+          <!-- filled by JS -->
+        </div>
+        <div class="sm-heatmap-legend">
+          <span>Less similar</span>
+          <div class="sm-heatmap-legend-bar"></div>
+          <span>More similar</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================== HOW THE AI AGENT RUNS A SEARCH =========================== -->
+<section id="agent-flow">
+  <div class="container">
+    <h2><span class="num">03</span> How the AI Finds FIH Protocols</h2>
+    <p class="section-lead">
+      Seven steps from your FIH question to ranked dose-escalation protocols. Some steps are deterministic rules (same input,
+      same output every time). Others use AI judgment that you should spot-check.
+    </p>
+
+    <div class="af-wrap">
+
+      <!-- Lane legend -->
+      <div class="af-lanes">
+        <div class="af-lane-key af-lane-scripted">
+          <div class="af-lane-dot" style="background:var(--primary);"></div>
+          <div class="af-lane-text"><strong>Scripted</strong> &mdash; Deterministic rules. Same input always gives same output.</div>
+        </div>
+        <div class="af-lane-key af-lane-ai">
+          <div class="af-lane-dot" style="background:var(--secondary);"></div>
+          <div class="af-lane-text"><strong>AI judgment</strong> &mdash; LLM reads and reasons. Spot-check these steps.</div>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="af-steps">
+
+        <!-- Step 1 — AI -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--secondary);">1</div>
+            <div class="af-step-line" style="background:var(--secondary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card ai">
+            <h4>Understand your FIH question</h4>
+            <p>The LLM reads your natural-language query and extracts structured fields: therapeutic area, drug, phase, and FIH study design type (SAD, MAD, food effect, DDI, etc.). If your question is ambiguous, it asks a clarifying question first.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 — Scripted -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--primary);">2</div>
+            <div class="af-step-line" style="background:var(--primary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card scripted">
+            <h4>Search ClinicalTrials.gov</h4>
+            <p>Three parallel queries hit the registry with different search strategies (broad, synonym-expanded, and tight)
+            to maximize recall. Results are merged and deduplicated.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 — Scripted -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--primary);">3</div>
+            <div class="af-step-line" style="background:var(--primary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card scripted">
+            <h4>Filter to CP-relevant trials</h4>
+            <p>A rule-based scoring system (0&ndash;100) rates each trial for clinical pharmacology relevance.
+            Vaccines, devices, behavioral studies, and topicals are filtered out. FIH/SAD/MAD designs and systemically absorbed drugs score highest. Only trials above the
+            relevance threshold survive.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 — AI -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--secondary);">4</div>
+            <div class="af-step-line" style="background:var(--secondary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card ai">
+            <h4>Rank by match to your question</h4>
+            <p>The LLM reads each surviving trial and scores 0&ndash;100 for how well it matches your
+            original query. This catches nuances the rule-based filter misses.</p>
+          </div>
+        </div>
+
+        <!-- Step 5 — Scripted -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--primary);">5</div>
+            <div class="af-step-line" style="background:var(--primary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card scripted">
+            <h4>Boost and sort</h4>
+            <p>Fixed-math boosts are applied (study-type bonus +15, CP score bonus +10) and the final list
+            is sorted by combined score. No AI judgment here &mdash; just arithmetic.</p>
+          </div>
+        </div>
+
+        <!-- Step 6 — AI -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--secondary);">6</div>
+            <div class="af-step-line" style="background:var(--secondary); opacity:0.3;"></div>
+          </div>
+          <div class="af-step-card ai">
+            <h4>CP advisory (optional)</h4>
+            <p>If you request it, a more capable LLM reads the top 3&ndash;5 trials and writes an FIH-focused
+            recommendation: why these protocols are relevant to your dose-escalation question, what PK data
+            to expect, and what design features matter for your starting-dose rationale.</p>
+          </div>
+        </div>
+
+        <!-- Step 7 — AI -->
+        <div class="af-step">
+          <div class="af-step-num-col">
+            <div class="af-step-num" style="background:var(--secondary);">7</div>
+            <div class="af-step-line" style="background:transparent;"></div>
+          </div>
+          <div class="af-step-card ai">
+            <h4>Protocol preview</h4>
+            <p>When you click "Preview" on a trial, the system downloads the protocol PDF, extracts structured
+            content (tables, sections, headings), and the LLM produces an FIH-focused assessment: drug and mechanism,
+            study design (SAD/MAD/crossover), PK sampling strategy, dose levels, escalation rule, and enrollment.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Trust pattern callout -->
+      <div class="af-trust-box">
+        <strong>Trust pattern:</strong> Every AI step outputs structured JSON before the next step runs.
+        You can see exactly what the LLM decided and fix it before any database query runs.
+        The scripted steps are fully deterministic &mdash; if you feed them the same input twice,
+        you get the same output twice.
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================== QUERY JOURNEY =========================== -->
+<section id="journey">
+  <div class="container">
+    <h2>The Query Journey</h2>
+    <p class="section-lead">
+      Click any step to see what happens behind the scenes. Each step is handled by a different file.
+    </p>
+    <div class="journey-wrap">
+      <div class="journey">
+        <div class="journey-steps" id="journey-steps"></div>
+        <div class="step-detail" id="step-detail"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== ARCHITECTURE MAP =========================== -->
+<section id="architecture">
+  <div class="container">
+    <h2>Architecture Map</h2>
+    <p class="section-lead">
+      Four figures built from the actual source code. Figure A shows the static module
+      dependency graph (who imports whom). Figures B–D show the three sequential execution
+      flows (search, preview, similarity) with real function calls at each step.
+    </p>
+
+    <div class="arch-tabs" id="arch-tabs">
+      <button class="arch-tab active" data-tab="sys"><span class="tab-letter">A</span>System Architecture</button>
+      <button class="arch-tab" data-tab="search"><span class="tab-letter">B</span>Search Flow</button>
+      <button class="arch-tab" data-tab="preview"><span class="tab-letter">C</span>Preview Flow</button>
+      <button class="arch-tab" data-tab="sim"><span class="tab-letter">D</span>Similarity Flow</button>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- FIGURE A: SYSTEM ARCHITECTURE (module dependency graph)         -->
+    <!-- ============================================================== -->
+    <div class="arch-panel active" data-tab="sys">
+      <div class="arch-wrap">
+        <svg class="arch-svg" viewBox="0 0 1080 880" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="fa-imp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#a78bfa"/>
+            </marker>
+            <marker id="fa-http" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+            </marker>
+            <marker id="fa-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#facc15"/>
+            </marker>
+            <marker id="fa-dot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e"/>
+            </marker>
+            <filter id="fa-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4"/>
+              <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- LAYER 1: Browser -->
+          <g transform="translate(430, 25)">
+            <rect width="220" height="66" rx="10" fill="#1f0a18" stroke="#ec4899" stroke-width="2"/>
+            <rect y="0" width="220" height="4" rx="4" fill="#ec4899"/>
+            <text x="110" y="30" text-anchor="middle" fill="#ec4899" font-size="13" font-weight="800" font-family="monospace">templates/index.html</text>
+            <text x="110" y="48" text-anchor="middle" fill="#fce7f3" font-size="10">Jinja2 single-page UI</text>
+            <text x="110" y="60" text-anchor="middle" fill="#94a3b8" font-size="9" font-style="italic">fetch() → JSON → DOM</text>
+          </g>
+          <path d="M 540 95 L 540 138" stroke="#22d3ee" stroke-width="2.5" marker-end="url(#fa-http)"/>
+          <text x="552" y="122" fill="#22d3ee" font-size="10" font-family="monospace" font-weight="700">HTTP</text>
+
+          <!-- LAYER 2: app.py -->
+          <g transform="translate(370, 142)" filter="url(#fa-glow)">
+            <rect width="340" height="96" rx="12" fill="#051220" stroke="#22d3ee" stroke-width="3"/>
+            <rect y="0" width="340" height="5" rx="5" fill="#22d3ee"/>
+            <text x="170" y="28" text-anchor="middle" fill="#22d3ee" font-size="16" font-weight="800" font-family="monospace">app.py</text>
+            <text x="170" y="46" text-anchor="middle" fill="#94a3b8" font-size="10">FastAPI · 11 routes · shared instances</text>
+            <line x1="20" y1="56" x2="320" y2="56" stroke="#22d3ee" opacity="0.25"/>
+            <text x="170" y="72" text-anchor="middle" fill="#cbd5e1" font-size="9" font-family="monospace">/api/parse · /api/search · /api/cp-advise</text>
+            <text x="170" y="86" text-anchor="middle" fill="#cbd5e1" font-size="9" font-family="monospace">/api/preview · /api/similar · /api/upload-protocol · /api/fda-reviews</text>
+          </g>
+
+          <!-- Import arrows fanning to Layer 3 -->
+          <g fill="none" stroke="#a78bfa" stroke-width="1.5">
+            <path d="M 410 240 C 410 266, 85 266, 85 285" marker-end="url(#fa-imp)"/>
+            <path d="M 450 240 C 450 266, 235 266, 235 285" marker-end="url(#fa-imp)"/>
+            <path d="M 490 240 C 490 266, 385 266, 385 285" marker-end="url(#fa-imp)"/>
+            <path d="M 530 240 C 530 266, 535 266, 535 285" marker-end="url(#fa-imp)"/>
+            <path d="M 570 240 C 570 266, 685 266, 685 285" marker-end="url(#fa-imp)"/>
+            <path d="M 610 240 C 610 266, 835 266, 835 285" marker-end="url(#fa-imp)"/>
+            <path d="M 650 240 C 650 266, 985 266, 985 285" marker-end="url(#fa-imp)"/>
+          </g>
+          <text x="540" y="260" fill="#a78bfa" font-size="8" font-family="monospace" text-anchor="middle">imports</text>
+
+          <!-- LAYER 3: 7 service modules -->
+          <!-- 1: llm_engine.py -->
+          <g transform="translate(20, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">llm_engine.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">LLMEngine</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">.parse_query()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">.parse_query_interactive()</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">.rank_results()</text>
+            <text x="8" y="85" fill="#cbd5e1" font-size="7.5" font-family="monospace">.preview_protocol_struc()</text>
+            <text x="8" y="96" fill="#cbd5e1" font-size="7.5" font-family="monospace">.cp_advise()</text>
+            <text x="8" y="107" fill="#94a3b8" font-size="7" font-style="italic">3 providers</text>
+          </g>
+          <!-- 2: ctgov_client.py -->
+          <g transform="translate(170, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">ctgov_client.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">CTGovClient</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">.search_studies()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">.filter_with_documents()</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">.download_document()</text>
+            <text x="8" y="85" fill="#cbd5e1" font-size="7.5" font-family="monospace">.get_study()</text>
+            <text x="8" y="96" fill="#cbd5e1" font-size="7.5" font-family="monospace">._parse_study()</text>
+            <text x="8" y="107" fill="#94a3b8" font-size="7" font-style="italic">requests lib</text>
+          </g>
+          <!-- 3: cp_agent.py -->
+          <g transform="translate(320, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">cp_agent.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">compute_cp_relevance()</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">filter_for_cp()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">MODALITY_SCORES</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">CP_RICH_DESIGN_KW</text>
+            <text x="8" y="85" fill="#cbd5e1" font-size="7.5" font-family="monospace">NON_CP_KEYWORDS</text>
+            <text x="8" y="96" fill="#cbd5e1" font-size="7.5" font-family="monospace">CP_ADVISOR_PROMPT</text>
+            <text x="8" y="107" fill="#94a3b8" font-size="7" font-style="italic">rule-based</text>
+          </g>
+          <!-- 4: pdf_extractor.py -->
+          <g transform="translate(470, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">pdf_extractor.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">extract_protocol()</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">format_sections_for_llm()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">_extract_with_docling()</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">_extract_with_pdfplumber()</text>
+            <text x="8" y="90" fill="#94a3b8" font-size="7" font-style="italic">docling primary</text>
+            <text x="8" y="100" fill="#94a3b8" font-size="7" font-style="italic">pdfplumber fallback</text>
+          </g>
+          <!-- 5: similarity_engine.py -->
+          <g transform="translate(620, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">similarity_engine.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">TrialSimilarityEngine</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">.find_similar_by_nct()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">.find_similar_by_text()</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">.build_index()</text>
+            <text x="8" y="85" fill="#cbd5e1" font-size="7.5" font-family="monospace">embed_texts()</text>
+            <text x="8" y="96" fill="#cbd5e1" font-size="7.5" font-family="monospace">_search_by_vector()</text>
+            <text x="8" y="107" fill="#94a3b8" font-size="7" font-style="italic">FAISS IndexFlatIP</text>
+          </g>
+          <!-- 6: fda_client.py -->
+          <g transform="translate(770, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">fda_client.py</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">FDAClient</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">.get_fda_info_for_study()</text>
+            <text x="8" y="63" fill="#cbd5e1" font-size="7.5" font-family="monospace">.get_cp_review_url()</text>
+            <text x="8" y="74" fill="#cbd5e1" font-size="7.5" font-family="monospace">.get_drug_label()</text>
+            <text x="8" y="85" fill="#cbd5e1" font-size="7.5" font-family="monospace">.search_application()</text>
+            <text x="8" y="101" fill="#94a3b8" font-size="7" font-style="italic">TTL cache</text>
+          </g>
+          <!-- 7: study_type_synonyms.py -->
+          <g transform="translate(920, 285)">
+            <rect width="130" height="112" rx="10" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect y="0" width="130" height="3" rx="3" fill="#a78bfa"/>
+            <text x="65" y="20" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="800" font-family="monospace">study_type_synonyms</text>
+            <line x1="10" y1="27" x2="120" y2="27" stroke="#a78bfa" opacity="0.25"/>
+            <text x="8" y="42" fill="#cbd5e1" font-size="7.5" font-family="monospace">expand_study_types()</text>
+            <text x="8" y="56" fill="#cbd5e1" font-size="7.5" font-family="monospace">score_study_type_match()</text>
+            <text x="8" y="74" fill="#94a3b8" font-size="7" font-style="italic">curated dict:</text>
+            <text x="8" y="85" fill="#94a3b8" font-size="7" font-style="italic">FIH → [first in human,</text>
+            <text x="8" y="95" fill="#94a3b8" font-size="7" font-style="italic">SAD, phase 1 initial,…]</text>
+          </g>
+
+          <!-- fda_client → cp_agent (imports NON_CP_KEYWORDS) -->
+          <g fill="none" stroke="#f43f5e" stroke-width="1.3" stroke-dasharray="4 3">
+            <path d="M 770 342 C 620 342, 500 342, 450 342" marker-end="url(#fa-dot)"/>
+          </g>
+          <text x="610" y="336" fill="#f43f5e" font-size="8" font-family="monospace" text-anchor="middle" font-weight="700">imports NON_CP_KEYWORDS</text>
+
+          <!-- similarity_engine → ontology_engine -->
+          <path d="M 685 397 L 540 432" stroke="#facc15" stroke-width="2" fill="none" marker-end="url(#fa-ext)"/>
+          <text x="640" y="420" fill="#facc15" font-size="8" font-family="monospace" font-weight="700">composes</text>
+
+          <!-- LAYER 4: ontology_engine.py -->
+          <g transform="translate(400, 438)">
+            <rect width="280" height="80" rx="10" fill="#2a1e06" stroke="#facc15" stroke-width="2"/>
+            <rect y="0" width="280" height="3" rx="3" fill="#facc15"/>
+            <text x="140" y="22" text-anchor="middle" fill="#facc15" font-size="12" font-weight="800" font-family="monospace">ontology_engine.py</text>
+            <line x1="15" y1="30" x2="265" y2="30" stroke="#facc15" opacity="0.25"/>
+            <text x="140" y="44" text-anchor="middle" fill="#cbd5e1" font-size="9" font-family="monospace">OntologyEngine · 4-layer composite</text>
+            <text x="140" y="58" text-anchor="middle" fill="#cbd5e1" font-size="8" font-family="monospace">.build_profile() · .compute_similarity() · .rerank_results()</text>
+            <text x="140" y="73" text-anchor="middle" fill="#facc15" font-size="9" font-weight="700">0.25·MeSH + 0.30·Drug + 0.30·FIH + 0.15·Emb</text>
+          </g>
+
+          <!-- ontology_engine → ontology_data fanning -->
+          <g fill="none" stroke="#facc15" stroke-width="1.5">
+            <path d="M 460 518 C 460 545, 190 545, 190 568" marker-end="url(#fa-ext)"/>
+            <path d="M 540 518 C 540 545, 540 550, 540 568" marker-end="url(#fa-ext)"/>
+            <path d="M 620 518 C 620 545, 890 545, 890 568" marker-end="url(#fa-ext)"/>
+          </g>
+          <text x="540" y="540" fill="#facc15" font-size="8" font-family="monospace" text-anchor="middle">imports</text>
+
+          <!-- LAYER 5: ontology_data modules -->
+          <g transform="translate(120, 568)">
+            <rect width="140" height="72" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="70" y="20" text-anchor="middle" fill="#facc15" font-size="10" font-weight="800" font-family="monospace">mesh_subset.py</text>
+            <line x1="10" y1="27" x2="130" y2="27" stroke="#facc15" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">condition_to_mesh()</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">condition_set_similarity()</text>
+            <text x="8" y="66" fill="#94a3b8" font-size="7" font-style="italic">NIH MeSH subset</text>
+          </g>
+          <g transform="translate(470, 568)">
+            <rect width="140" height="72" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="70" y="20" text-anchor="middle" fill="#facc15" font-size="10" font-weight="800" font-family="monospace">drug_classes.py</text>
+            <line x1="10" y1="27" x2="130" y2="27" stroke="#facc15" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">drug_to_mechanism()</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">intervention_set_sim()</text>
+            <text x="8" y="66" fill="#94a3b8" font-size="7" font-style="italic">MoA mapping</text>
+          </g>
+          <g transform="translate(820, 568)">
+            <rect width="140" height="72" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="2"/>
+            <text x="70" y="20" text-anchor="middle" fill="#facc15" font-size="10" font-weight="800" font-family="monospace">fih_taxonomy.py</text>
+            <line x1="10" y1="27" x2="130" y2="27" stroke="#facc15" opacity="0.25"/>
+            <text x="8" y="40" fill="#cbd5e1" font-size="7.5" font-family="monospace">extract_fih_profile()</text>
+            <text x="8" y="52" fill="#cbd5e1" font-size="7.5" font-family="monospace">fih_profile_similarity()</text>
+            <text x="8" y="66" fill="#facc15" font-size="7" font-weight="800">★ 7-dim novel IP</text>
+          </g>
+
+          <!-- models.py shared bar -->
+          <g transform="translate(80, 680)">
+            <rect width="920" height="48" rx="8" fill="#1a1d2e" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="460" y="22" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="800" font-family="monospace">models.py · shared Pydantic data classes</text>
+            <text x="460" y="38" text-anchor="middle" fill="#cbd5e1" font-size="9">SearchIntent · StudyResult · StudyDocument · ProtocolContent · SearchResponse — imported by every module above</text>
+          </g>
+
+          <!-- External services label -->
+          <text x="540" y="762" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800" letter-spacing="2">EXTERNAL APIs AND LIBRARIES</text>
+
+          <g transform="translate(30, 780)">
+            <rect width="160" height="56" rx="8" fill="#1a1405" stroke="#facc15" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="80" y="22" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800">OpenAI API</text>
+            <text x="80" y="36" text-anchor="middle" fill="#94a3b8" font-size="9">gpt-4o-mini · gpt-4o</text>
+            <text x="80" y="48" text-anchor="middle" fill="#94a3b8" font-size="8">text-embedding-3-small</text>
+          </g>
+          <g transform="translate(210, 780)">
+            <rect width="160" height="56" rx="8" fill="#1a1405" stroke="#facc15" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="80" y="22" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800">ClinicalTrials.gov</text>
+            <text x="80" y="36" text-anchor="middle" fill="#94a3b8" font-size="9">API v2 + PDF CDN</text>
+            <text x="80" y="48" text-anchor="middle" fill="#94a3b8" font-size="8">free, no key</text>
+          </g>
+          <g transform="translate(390, 780)">
+            <rect width="160" height="56" rx="8" fill="#1a1405" stroke="#facc15" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="80" y="22" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800">openFDA</text>
+            <text x="80" y="36" text-anchor="middle" fill="#94a3b8" font-size="9">Drug Label · Drugs@FDA</text>
+            <text x="80" y="48" text-anchor="middle" fill="#94a3b8" font-size="8">accessdata.fda.gov</text>
+          </g>
+          <g transform="translate(570, 780)">
+            <rect width="160" height="56" rx="8" fill="#1a1405" stroke="#facc15" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="80" y="22" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800">docling + pdfplumber</text>
+            <text x="80" y="36" text-anchor="middle" fill="#94a3b8" font-size="9">PDF → structured text</text>
+            <text x="80" y="48" text-anchor="middle" fill="#94a3b8" font-size="8">local Python libraries</text>
+          </g>
+          <g transform="translate(750, 780)">
+            <rect width="160" height="56" rx="8" fill="#1a1405" stroke="#facc15" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="80" y="22" text-anchor="middle" fill="#facc15" font-size="11" font-weight="800">FAISS</text>
+            <text x="80" y="36" text-anchor="middle" fill="#94a3b8" font-size="9">IndexFlatIP (local)</text>
+            <text x="80" y="48" text-anchor="middle" fill="#94a3b8" font-size="8">data/trial_index.faiss</text>
+          </g>
+
+          <!-- Arrows: modules → external -->
+          <g fill="none" stroke="#facc15" stroke-width="1.2" stroke-dasharray="4 3">
+            <path d="M 85 397 C 85 735, 110 760, 110 780" marker-end="url(#fa-ext)"/>
+            <path d="M 235 397 C 235 735, 290 760, 290 780" marker-end="url(#fa-ext)"/>
+            <path d="M 835 397 C 835 735, 470 760, 470 780" marker-end="url(#fa-ext)"/>
+            <path d="M 535 397 C 535 735, 650 760, 650 780" marker-end="url(#fa-ext)"/>
+            <path d="M 685 397 C 685 735, 830 760, 830 780" marker-end="url(#fa-ext)"/>
+            <path d="M 715 397 C 715 735, 150 760, 150 780" marker-end="url(#fa-ext)"/>
+          </g>
+        </svg>
+      </div>
+      <div class="arch-caption">
+        <span class="fig-label">Figure A.</span>
+        <strong>System architecture and module dependencies.</strong>
+        Solid violet arrows denote Python <code>import</code> relationships.
+        The FastAPI entry point <code>app.py</code> imports 7 service modules
+        (Layer 3); <code>similarity_engine</code> composes <code>ontology_engine</code>
+        (Layer 4), which in turn uses three ontology modules (Layer 5).
+        A non-obvious dashed rose arrow shows that <code>fda_client</code> imports
+        <code>NON_CP_KEYWORDS</code> from <code>cp_agent</code>, coupling the FDA client
+        to CP domain logic. All service modules share Pydantic data classes from
+        <code>models.py</code> (dashed indigo). Dashed yellow arrows terminate at
+        external APIs and local libraries.
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- FIGURE B: SEARCH FLOW (sequential)                              -->
+    <!-- ============================================================== -->
+    <div class="arch-panel" data-tab="search">
+      <div class="arch-wrap">
+        <svg class="arch-svg" viewBox="0 0 1080 1240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="fb-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+            </marker>
+            <marker id="fb-arr-cy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+            </marker>
+          </defs>
+
+          <!-- Column guide line -->
+          <line x1="120" y1="50" x2="120" y2="1190" stroke="#334155" stroke-width="2" stroke-dasharray="2 4" opacity="0.3"/>
+
+          <!-- Step 1 -->
+          <g transform="translate(94, 40)">
+            <circle r="26" fill="#ec4899"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">1</text>
+          </g>
+          <g transform="translate(160, 22)">
+            <rect width="800" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">User types natural-language query in browser and submits</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">templates/index.html → fetch('/api/parse', { query })</text>
+          </g>
+          <line x1="120" y1="70" x2="120" y2="108" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 2 -->
+          <g transform="translate(94, 118)">
+            <circle r="26" fill="#22d3ee"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">2</text>
+          </g>
+          <g transform="translate(160, 100)">
+            <rect width="800" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">POST /api/parse → app.py calls LLM for intent extraction</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">engine.parse_query_interactive(query, conversation) → OpenAI (gpt-4o-mini)</text>
+          </g>
+          <line x1="120" y1="148" x2="120" y2="186" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 3 -->
+          <g transform="translate(94, 196)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">3</text>
+          </g>
+          <g transform="translate(160, 178)">
+            <rect width="800" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">LLM returns {status: "ok", intent, confidence, reasoning, suggestions}</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">SearchIntent(search_terms, conditions, interventions, study_types, phases, statuses, …)</text>
+          </g>
+          <line x1="120" y1="226" x2="120" y2="264" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 4 -->
+          <g transform="translate(94, 274)">
+            <circle r="26" fill="#ec4899"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">4</text>
+          </g>
+          <g transform="translate(160, 256)">
+            <rect width="800" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">Browser shows parsed intent; user confirms; POST /api/search</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">fetch('/api/search', { query, intent })</text>
+          </g>
+          <line x1="120" y1="304" x2="120" y2="342" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 5 -->
+          <g transform="translate(94, 352)">
+            <circle r="26" fill="#22d3ee"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">5</text>
+          </g>
+          <g transform="translate(160, 334)">
+            <rect width="800" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">app.py builds base_query and runs 3 parallel search strategies</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">base_query = search_terms + conditions + interventions</text>
+          </g>
+          <line x1="120" y1="382" x2="120" y2="420" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 6: Three parallel branches -->
+          <g transform="translate(94, 430)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">6</text>
+          </g>
+          <g transform="translate(160, 412)">
+            <rect width="800" height="150" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Three strategies run in parallel — results merged by nct_id (deduplicated)</text>
+            <!-- Strategy A -->
+            <rect x="16" y="32" width="760" height="32" rx="6" fill="#1a0f30" stroke="#a78bfa" stroke-width="1"/>
+            <text x="24" y="48" fill="#facc15" font-size="9" font-weight="800" font-family="monospace">STRATEGY A</text>
+            <text x="90" y="48" fill="#cbd5e1" font-size="10" font-family="monospace">ctgov.search_studies(base_query, phases, statuses, 3 pages) → CT.gov API v2</text>
+            <!-- Strategy B -->
+            <rect x="16" y="68" width="760" height="32" rx="6" fill="#1a0f30" stroke="#a78bfa" stroke-width="1"/>
+            <text x="24" y="84" fill="#facc15" font-size="9" font-weight="800" font-family="monospace">STRATEGY B</text>
+            <text x="90" y="84" fill="#cbd5e1" font-size="10" font-family="monospace">expand_study_types() → OR-join top 12 synonyms → search_studies(…)</text>
+            <!-- Strategy C -->
+            <rect x="16" y="104" width="760" height="32" rx="6" fill="#1a0f30" stroke="#a78bfa" stroke-width="1"/>
+            <text x="24" y="120" fill="#facc15" font-size="9" font-weight="800" font-family="monospace">STRATEGY C</text>
+            <text x="90" y="120" fill="#cbd5e1" font-size="10" font-family="monospace">search_studies(base_query + primary_study_type, 2 pages)</text>
+          </g>
+          <line x1="120" y1="562" x2="120" y2="600" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 7 -->
+          <g transform="translate(94, 610)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">7</text>
+          </g>
+          <g transform="translate(160, 592)">
+            <rect width="800" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Filter results to keep only trials with downloadable documents</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">ctgov.filter_with_documents(results) · retry without status if len &lt; 5</text>
+          </g>
+          <line x1="120" y1="640" x2="120" y2="678" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 8 -->
+          <g transform="translate(94, 688)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">8</text>
+          </g>
+          <g transform="translate(160, 670)">
+            <rect width="800" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Local study-type score boost (before LLM ranking)</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">score_study_type_match(study.title + summary, intent.study_types) → 0.0–1.0</text>
+          </g>
+          <line x1="120" y1="718" x2="120" y2="756" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 9 -->
+          <g transform="translate(94, 766)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">9</text>
+          </g>
+          <g transform="translate(160, 748)">
+            <rect width="800" height="64" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">CP Agent filters non-CP noise (vaccines, devices, topicals…)</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">filter_for_cp(filtered, min_cp_score=20) → [(study, cp_info), …]</text>
+            <text x="16" y="54" fill="#94a3b8" font-size="9" font-style="italic">cp_score = 0.50·design_score + 0.30·modality_score + 0.10·phase_bonus + 0.10·doc_bonus</text>
+          </g>
+          <line x1="120" y1="812" x2="120" y2="850" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 10 -->
+          <g transform="translate(94, 860)">
+            <circle r="26" fill="#22d3ee"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">10</text>
+          </g>
+          <g transform="translate(160, 842)">
+            <rect width="800" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">LLM re-ranks the filtered pool for researcher-query match</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">engine.rank_results(query, filtered, top_n=20) → OpenAI (gpt-4o-mini)</text>
+          </g>
+          <line x1="120" y1="890" x2="120" y2="928" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 11 -->
+          <g transform="translate(94, 938)">
+            <circle r="26" fill="#a78bfa"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">11</text>
+          </g>
+          <g transform="translate(160, 920)">
+            <rect width="800" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Apply post-rank boosts and final sort</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">relevance_score += study_type_boost (+15) + cp_score_boost (+10); sort desc</text>
+          </g>
+          <line x1="120" y1="968" x2="120" y2="1006" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 12 -->
+          <g transform="translate(94, 1016)">
+            <circle r="26" fill="#22d3ee"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">12</text>
+          </g>
+          <g transform="translate(160, 998)">
+            <rect width="800" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">Build SearchResponse, inject cp_info into each result, return JSON</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">SearchResponse(query, intent, results, total_found).model_dump()</text>
+          </g>
+          <line x1="120" y1="1046" x2="120" y2="1084" stroke="#22d3ee" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#fb-arr-cy)"/>
+
+          <!-- Step 13 -->
+          <g transform="translate(94, 1094)">
+            <circle r="26" fill="#ec4899"/>
+            <text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">13</text>
+          </g>
+          <g transform="translate(160, 1076)">
+            <rect width="800" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">Browser renders ranked trial cards with CP scores and doc badges</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">JS builds DOM cards from response.results · Protocol · SAP · ICF buttons</text>
+          </g>
+          <line x1="120" y1="1124" x2="120" y2="1162" stroke="#64748b" stroke-width="2" marker-end="url(#fb-arr)"/>
+
+          <!-- Step 14 (optional CP advisory) -->
+          <g transform="translate(94, 1172)">
+            <circle r="26" fill="#facc15"/>
+            <text y="6" text-anchor="middle" fill="#1a1405" font-size="17" font-weight="800">14</text>
+          </g>
+          <g transform="translate(160, 1154)">
+            <rect width="800" height="48" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#facc15" font-size="12" font-weight="800">(Optional) User clicks "CP advisory" → POST /api/cp-advise → gpt-4o</text>
+            <text x="16" y="38" fill="#fef3c7" font-size="10" font-family="monospace">engine.cp_advise(CP_ADVISOR_PROMPT, compact_summaries) → expert recommendation</text>
+          </g>
+        </svg>
+      </div>
+      <div class="arch-caption">
+        <span class="fig-label">Figure B.</span>
+        <strong>Search execution flow.</strong> Sequential trace of a single user query
+        from natural-language input to ranked trial list. Step 6 shows the three parallel
+        search strategies (broad / synonym-expanded / tight) that give the system high
+        recall. The pipeline combines one LLM call for intent parsing (step 2), one
+        rule-based CP filter (step 9), and one LLM re-rank (step 10), then two numerical
+        boosts (step 11). Step 14 is an optional follow-up route (<code>/api/cp-advise</code>)
+        that uses the more expensive <code>gpt-4o</code> model for expert recommendations.
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- FIGURE C: PREVIEW FLOW (sequential)                             -->
+    <!-- ============================================================== -->
+    <div class="arch-panel" data-tab="preview">
+      <div class="arch-wrap">
+        <svg class="arch-svg" viewBox="0 0 1080 820" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="fc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+            </marker>
+          </defs>
+          <line x1="120" y1="50" x2="120" y2="770" stroke="#334155" stroke-width="2" stroke-dasharray="2 4" opacity="0.3"/>
+
+          <g transform="translate(94, 40)"><circle r="26" fill="#ec4899"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">1</text></g>
+          <g transform="translate(160, 22)">
+            <rect width="820" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">User clicks "Preview" on a trial card</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">fetch('/api/preview', { url: doc.download_url, nct_id })</text>
+          </g>
+          <line x1="120" y1="70" x2="120" y2="108" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 118)"><circle r="26" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">2</text></g>
+          <g transform="translate(160, 100)">
+            <rect width="820" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">app.py downloads the PDF from ClinicalTrials.gov CDN</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">ctgov.download_document(url, nct_id, download_dir) → downloads/NCT…/Prot_000.pdf</text>
+          </g>
+          <line x1="120" y1="148" x2="120" y2="186" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 196)"><circle r="26" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">3</text></g>
+          <g transform="translate(160, 178)">
+            <rect width="820" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">pdf_extractor tries docling first (structured mode with tables)</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">extract_protocol(local_path) → _extract_with_docling(pdf_path)</text>
+          </g>
+          <line x1="120" y1="226" x2="120" y2="264" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 274)"><circle r="26" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">4</text></g>
+          <g transform="translate(160, 256)">
+            <rect width="820" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Docling: TableFormerMode.ACCURATE · do_table_structure=True</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">DocumentConverter().convert(pdf) → markdown + tables + sections</text>
+          </g>
+          <line x1="120" y1="304" x2="120" y2="342" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 352)"><circle r="26" fill="#f59e0b"/><text y="6" text-anchor="middle" fill="#fff" font-size="16" font-weight="800">4b</text></g>
+          <g transform="translate(160, 334)">
+            <rect width="820" height="48" rx="8" fill="#2a1e06" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <text x="16" y="20" fill="#f59e0b" font-size="12" font-weight="800">Fallback branch — if docling fails, pdfplumber takes over</text>
+            <text x="16" y="38" fill="#fef3c7" font-size="10" font-family="monospace">except Exception: return _extract_with_pdfplumber(pdf_path)</text>
+          </g>
+          <line x1="120" y1="382" x2="120" y2="420" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 430)"><circle r="26" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">5</text></g>
+          <g transform="translate(160, 412)">
+            <rect width="820" height="62" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">Return ProtocolContent data class</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">ProtocolContent(full_text, page_count, sections: dict, tables: list, has_redactions)</text>
+            <text x="16" y="53" fill="#94a3b8" font-size="9" font-style="italic">Section keys detected: Synopsis, Study Design, Objectives, PK, Dosing, Eligibility, …</text>
+          </g>
+          <line x1="120" y1="474" x2="120" y2="512" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 522)"><circle r="26" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">6</text></g>
+          <g transform="translate(160, 504)">
+            <rect width="820" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">app.py packs extracted sections into an LLM-ready prompt</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">sections_text = format_sections_for_llm(content, max_chars=20000)</text>
+          </g>
+          <line x1="120" y1="552" x2="120" y2="590" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 600)"><circle r="26" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">7</text></g>
+          <g transform="translate(160, 582)">
+            <rect width="820" height="62" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">LLM generates structured CP assessment</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">engine.preview_protocol_structured(sections_text) → OpenAI (STRUCTURED_PREVIEW_PROMPT)</text>
+            <text x="16" y="54" fill="#94a3b8" font-size="9" font-style="italic">Returns: Drug &amp; Indication · Study Design · Key PK · Dosing · CP Relevance · Data Richness · Redactions</text>
+          </g>
+          <line x1="120" y1="644" x2="120" y2="682" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 692)"><circle r="26" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">8</text></g>
+          <g transform="translate(160, 674)">
+            <rect width="820" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">Return JSON with summary, section previews, tables, metadata</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">{summary, page_count, sections, tables[:5], has_redactions, section_names}</text>
+          </g>
+          <line x1="120" y1="722" x2="120" y2="760" stroke="#64748b" stroke-width="2" marker-end="url(#fc-arr)"/>
+
+          <g transform="translate(94, 770)"><circle r="26" fill="#ec4899"/><text y="6" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">9</text></g>
+          <g transform="translate(160, 752)">
+            <rect width="820" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">Browser displays the structured CP assessment inline on the trial card</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">JS renders summary markdown + section preview collapsible cards</text>
+          </g>
+        </svg>
+      </div>
+      <div class="arch-caption">
+        <span class="fig-label">Figure C.</span>
+        <strong>Protocol preview flow.</strong> Triggered when the user clicks "Preview"
+        on a trial card. The pipeline hits three network endpoints sequentially: CT.gov CDN
+        (step 2), docling (steps 3–4; note the pdfplumber fallback at 4b), and OpenAI
+        (step 7). The critical handoff is step 6, where <code>format_sections_for_llm</code>
+        serializes the parsed section dictionary into a bounded prompt so the LLM can
+        produce a structured 7-field CP assessment.
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- FIGURE D: SIMILARITY FLOW (two branches merging)                -->
+    <!-- ============================================================== -->
+    <div class="arch-panel" data-tab="sim">
+      <div class="arch-wrap">
+        <svg class="arch-svg" viewBox="0 0 1080 1180" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="fd-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+            </marker>
+            <marker id="fd-arr-y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#facc15"/>
+            </marker>
+          </defs>
+
+          <!-- Two branch headers -->
+          <g transform="translate(20, 30)">
+            <rect width="510" height="44" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="2"/>
+            <text x="255" y="20" text-anchor="middle" fill="#ec4899" font-size="12" font-weight="800">BRANCH D1 — Find similar by known trial (NCT ID)</text>
+            <text x="255" y="36" text-anchor="middle" fill="#fce7f3" font-size="10" font-family="monospace">POST /api/similar { nct_id }</text>
+          </g>
+          <g transform="translate(550, 30)">
+            <rect width="510" height="44" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="2"/>
+            <text x="255" y="20" text-anchor="middle" fill="#ec4899" font-size="12" font-weight="800">BRANCH D2 — Find similar by uploaded PDF</text>
+            <text x="255" y="36" text-anchor="middle" fill="#fce7f3" font-size="10" font-family="monospace">POST /api/upload-protocol { file }</text>
+          </g>
+
+          <!-- D1 Branch left column (x ~ 90) -->
+          <line x1="110" y1="90" x2="110" y2="520" stroke="#334155" stroke-width="2" stroke-dasharray="2 4" opacity="0.3"/>
+          <!-- D2 Branch right column (x ~ 640) -->
+          <line x1="640" y1="90" x2="640" y2="520" stroke="#334155" stroke-width="2" stroke-dasharray="2 4" opacity="0.3"/>
+
+          <!-- ======= BRANCH D1 ======= -->
+          <g transform="translate(84, 96)"><circle r="22" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">1</text></g>
+          <g transform="translate(140, 80)">
+            <rect width="390" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#22d3ee" font-size="11" font-weight="800">Check if sim_engine index is loaded</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">if not sim_engine.is_loaded: raise 503</text>
+          </g>
+          <line x1="110" y1="128" x2="110" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(84, 170)"><circle r="22" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">2</text></g>
+          <g transform="translate(140, 154)">
+            <rect width="390" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#a78bfa" font-size="11" font-weight="800">Call sim_engine.find_similar_by_nct</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">idx = self.nct_to_idx.get(nct_id)</text>
+          </g>
+          <line x1="110" y1="202" x2="110" y2="234" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(84, 244)"><circle r="22" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">3</text></g>
+          <g transform="translate(140, 226)">
+            <rect width="390" height="64" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#a78bfa" font-size="11" font-weight="800">If in index: reconstruct vector · else fetch from CT.gov</text>
+            <text x="12" y="33" fill="#cbd5e1" font-size="9" font-family="monospace">vec = self.index.reconstruct(idx).reshape(1, -1)</text>
+            <text x="12" y="48" fill="#cbd5e1" font-size="9" font-family="monospace">else: CTGovClient.search_studies(nct_id)</text>
+          </g>
+          <line x1="110" y1="290" x2="110" y2="322" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(84, 332)"><circle r="22" fill="#facc15"/><text y="6" text-anchor="middle" fill="#1a1405" font-size="14" font-weight="800">4</text></g>
+          <g transform="translate(140, 314)">
+            <rect width="390" height="48" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#facc15" font-size="11" font-weight="800">Get query ontology profile</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">query_profile = ontology_engine.profiles[nct_id]</text>
+          </g>
+          <line x1="110" y1="362" x2="110" y2="532" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <!-- ======= BRANCH D2 ======= -->
+          <g transform="translate(614, 96)"><circle r="22" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">1</text></g>
+          <g transform="translate(670, 80)">
+            <rect width="390" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#22d3ee" font-size="11" font-weight="800">Save uploaded PDF to temp file</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">NamedTemporaryFile(delete=False, dir=downloads)</text>
+          </g>
+          <line x1="640" y1="128" x2="640" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(614, 170)"><circle r="22" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">2</text></g>
+          <g transform="translate(670, 154)">
+            <rect width="390" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#a78bfa" font-size="11" font-weight="800">Extract structured content from PDF</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">protocol = extract_protocol(tmp_path) → docling</text>
+          </g>
+          <line x1="640" y1="202" x2="640" y2="234" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(614, 244)"><circle r="22" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">3</text></g>
+          <g transform="translate(670, 226)">
+            <rect width="390" height="64" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#a78bfa" font-size="11" font-weight="800">Build embedding text + extract hints</text>
+            <text x="12" y="33" fill="#cbd5e1" font-size="9" font-family="monospace">embed_text = join(Synopsis, Study Design, PK, Dosing…)</text>
+            <text x="12" y="48" fill="#cbd5e1" font-size="9" font-family="monospace">condition/intervention hints from sections</text>
+          </g>
+          <line x1="640" y1="290" x2="640" y2="322" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(614, 332)"><circle r="22" fill="#facc15"/><text y="6" text-anchor="middle" fill="#1a1405" font-size="14" font-weight="800">4</text></g>
+          <g transform="translate(670, 314)">
+            <rect width="390" height="48" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#facc15" font-size="11" font-weight="800">Build query profile from text</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">ontology_engine.build_profile_from_text(text, hints)</text>
+          </g>
+          <line x1="640" y1="362" x2="640" y2="394" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(614, 404)"><circle r="22" fill="#facc15"/><text y="6" text-anchor="middle" fill="#1a1405" font-size="14" font-weight="800">5</text></g>
+          <g transform="translate(670, 386)">
+            <rect width="390" height="48" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="1.5"/>
+            <text x="12" y="18" fill="#facc15" font-size="11" font-weight="800">Embed text with OpenAI → 1536-d vector</text>
+            <text x="12" y="34" fill="#cbd5e1" font-size="9" font-family="monospace">embed_single(text, "text-embedding-3-small")</text>
+          </g>
+          <line x1="640" y1="434" x2="640" y2="532" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <!-- ======= MERGE POINT ======= -->
+          <path d="M 110 540 Q 110 570, 375 570 Q 640 570, 640 540" stroke="#facc15" stroke-width="2.5" fill="none"/>
+          <path d="M 375 570 L 375 600" stroke="#facc15" stroke-width="2.5" marker-end="url(#fd-arr-y)"/>
+          <text x="540" y="588" fill="#facc15" font-size="11" font-weight="800" text-anchor="middle">both branches converge here</text>
+
+          <!-- Unified pipeline -->
+          <line x1="540" y1="610" x2="540" y2="618" stroke="#64748b" stroke-width="2"/>
+
+          <g transform="translate(514, 620)"><circle r="24" fill="#a78bfa"/><text y="6" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">6</text></g>
+          <g transform="translate(160, 602)">
+            <rect width="820" height="48" rx="8" fill="#0f0a1c" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#a78bfa" font-size="12" font-weight="800">FAISS inner-product search (oversample 3× for ontology rerank)</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">scores, indices = self.index.search(vec, top_k * 3)</text>
+          </g>
+          <line x1="540" y1="650" x2="540" y2="688" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(514, 698)"><circle r="24" fill="#facc15"/><text y="6" text-anchor="middle" fill="#1a1405" font-size="15" font-weight="800">7</text></g>
+          <g transform="translate(160, 680)">
+            <rect width="820" height="216" rx="8" fill="#2a1e06" stroke="#facc15" stroke-width="2"/>
+            <text x="16" y="22" fill="#facc15" font-size="13" font-weight="800">ontology_engine.rerank_results() — per-candidate 4-layer scoring</text>
+            <text x="16" y="40" fill="#cbd5e1" font-size="10" font-family="monospace">for cand in candidates:</text>
+            <!-- Layer 1 -->
+            <rect x="26" y="52" width="786" height="30" rx="5" fill="#1a1405" stroke="#facc15" stroke-width="1"/>
+            <text x="36" y="71" fill="#facc15" font-size="10" font-weight="800">L1 · 25%</text>
+            <text x="105" y="71" fill="#cbd5e1" font-size="10" font-family="monospace">mesh_score = condition_set_similarity(query.conditions, cand.conditions)</text>
+            <text x="680" y="71" fill="#94a3b8" font-size="9" font-style="italic">from mesh_subset</text>
+            <!-- Layer 2 -->
+            <rect x="26" y="88" width="786" height="30" rx="5" fill="#1a1405" stroke="#facc15" stroke-width="1"/>
+            <text x="36" y="107" fill="#facc15" font-size="10" font-weight="800">L2 · 30%</text>
+            <text x="105" y="107" fill="#cbd5e1" font-size="10" font-family="monospace">drug_score = intervention_set_similarity(query.interv, cand.interv)</text>
+            <text x="680" y="107" fill="#94a3b8" font-size="9" font-style="italic">from drug_classes</text>
+            <!-- Layer 3 -->
+            <rect x="26" y="124" width="786" height="30" rx="5" fill="#1a1405" stroke="#facc15" stroke-width="1"/>
+            <text x="36" y="143" fill="#facc15" font-size="10" font-weight="800">L3 · 30%</text>
+            <text x="105" y="143" fill="#cbd5e1" font-size="10" font-family="monospace">fih_score = fih_profile_similarity(query.fih_profile, cand.fih_profile)</text>
+            <text x="680" y="143" fill="#94a3b8" font-size="9" font-style="italic">from fih_taxonomy</text>
+            <!-- Composite -->
+            <rect x="26" y="162" width="786" height="30" rx="5" fill="#1a1405" stroke="#facc15" stroke-width="1.5"/>
+            <text x="36" y="181" fill="#facc15" font-size="10" font-weight="800">Σ</text>
+            <text x="105" y="181" fill="#fef3c7" font-size="10" font-weight="800" font-family="monospace">overall = 0.25·mesh + 0.30·drug + 0.30·fih + 0.15·embedding</text>
+            <text x="16" y="206" fill="#cbd5e1" font-size="10" font-family="monospace">candidates.sort(key=similarity_score, reverse=True)[:top_k]</text>
+          </g>
+          <line x1="540" y1="896" x2="540" y2="934" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(514, 944)"><circle r="24" fill="#ef4444"/><text y="6" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">8</text></g>
+          <g transform="translate(160, 926)">
+            <rect width="820" height="48" rx="8" fill="#1f0606" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ef4444" font-size="12" font-weight="800">Enrich each result with CP relevance score</text>
+            <text x="16" y="38" fill="#fecaca" font-size="10" font-family="monospace">for r in results: cp_agent.compute_cp_relevance(StudyResult stub)</text>
+          </g>
+          <line x1="540" y1="974" x2="540" y2="1012" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(514, 1022)"><circle r="24" fill="#22d3ee"/><text y="6" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">9</text></g>
+          <g transform="translate(160, 1004)">
+            <rect width="820" height="48" rx="8" fill="#082030" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#22d3ee" font-size="12" font-weight="800">Return {nct_id or extracted_info, results, index_size} → Browser</text>
+            <text x="16" y="38" fill="#cbd5e1" font-size="10" font-family="monospace">JSONResponse with similarity_score + similarity_breakdown per result</text>
+          </g>
+          <line x1="540" y1="1052" x2="540" y2="1090" stroke="#64748b" stroke-width="2" marker-end="url(#fd-arr)"/>
+
+          <g transform="translate(514, 1100)"><circle r="24" fill="#ec4899"/><text y="6" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">10</text></g>
+          <g transform="translate(160, 1082)">
+            <rect width="820" height="48" rx="8" fill="#1f0a18" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="16" y="20" fill="#ec4899" font-size="12" font-weight="800">Browser renders similar trials with per-axis similarity breakdown</text>
+            <text x="16" y="38" fill="#fce7f3" font-size="10" font-family="monospace">each card shows: mesh_score · drug_score · fih_score · embedding_score · overall</text>
+          </g>
+        </svg>
+      </div>
+      <div class="arch-caption">
+        <span class="fig-label">Figure D.</span>
+        <strong>Trial-design similarity search flow (two variants merging).</strong>
+        Both entry points converge at step 6 (FAISS oversampled search). Step 7 is the
+        heart of the system — <code>ontology_engine.rerank_results</code> performs three
+        independent similarity computations per candidate (MeSH conditions, drug classes,
+        FIH taxonomy) and combines them with the FAISS embedding score using fixed weights
+        <code>0.25 / 0.30 / 0.30 / 0.15</code>. The FAISS step oversamples by 3× so that
+        ontology-strong but embedding-weak candidates can still surface. Step 8 attaches
+        a CP relevance score so results are ranked by both design similarity AND CP value.
+        <br><br>
+        <em>Scoping note:</em> this engine answers <strong>"what other FIH trials have
+        similar designs"</strong> — not <strong>"what drugs are pharmacologically similar
+        enough to inform my new molecule's FIH."</strong> The latter question (targeting
+        tox profile, ADME, MoA, DDI, dose-selection basis) is the job of a separate
+        drug-pharmacology similarity layer that will be built from FDA Clinical
+        Pharmacology review PDFs.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================== FIH TAXONOMY =========================== -->
+<section id="taxonomy">
+  <div class="container">
+    <h2><span class="num">04</span> Seven Dimensions of FIH Trial Design</h2>
+    <p class="section-lead">
+      Seven dimensions that describe any FIH / dose-escalation trial. Click a segment to explore.
+      The weights determine how much each dimension contributes to similarity scoring.
+    </p>
+    <div class="taxonomy-wrap">
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 240 240" id="donut-svg">
+          <text class="donut-center" x="120" y="115" font-size="36" id="donut-center-num">25%</text>
+          <text class="donut-center-label" x="120" y="140" id="donut-center-label">PK DESIGN</text>
+        </svg>
+      </div>
+      <div class="tax-detail" id="tax-detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== FILE GRID =========================== -->
+<section id="files">
+  <div class="container">
+    <h2><span class="num">05</span> The Files</h2>
+    <p class="section-lead">
+      The modules behind FIH protocol scoring and similarity search. Click any tile to expand.
+    </p>
+    <div class="files-wrap">
+      <div class="filter-pills" id="file-filters">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="web">Web &amp; API</button>
+        <button class="pill" data-filter="ai">AI / LLM</button>
+        <button class="pill" data-filter="cp">CP Brain</button>
+        <button class="pill" data-filter="pdf">PDF</button>
+        <button class="pill" data-filter="similarity">Similarity</button>
+        <button class="pill" data-filter="ontology">Ontology</button>
+        <button class="pill" data-filter="eval">Eval</button>
+      </div>
+      <div class="file-grid" id="file-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== SIMILARITY CALCULATOR =========================== -->
+<section id="similarity">
+  <div class="container">
+    <h2>Trial-Design Similarity Calculator</h2>
+    <p class="section-lead">
+      The similarity engine combines four signals into a composite score that measures
+      how close two clinical trials are <em>by design</em>. Drag the sliders to see how
+      the weights shape the final answer.
+    </p>
+    <div class="sim-wrap">
+      <div class="sim-row">
+        <div class="sim-label">
+          <strong>MeSH condition distance</strong>
+          <small>weight: 25%</small>
+        </div>
+        <input type="range" min="0" max="100" value="70" class="sim-slider" data-weight="0.25" id="sim-1">
+        <div class="sim-value" id="sim-1-val">70%</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-label">
+          <strong>Drug class / mechanism</strong>
+          <small>weight: 30%</small>
+        </div>
+        <input type="range" min="0" max="100" value="80" class="sim-slider" data-weight="0.30" id="sim-2">
+        <div class="sim-value" id="sim-2-val">80%</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-label">
+          <strong>FIH taxonomy match</strong>
+          <small>weight: 30%</small>
+        </div>
+        <input type="range" min="0" max="100" value="65" class="sim-slider" data-weight="0.30" id="sim-3">
+        <div class="sim-value" id="sim-3-val">65%</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-label">
+          <strong>Text embedding cosine</strong>
+          <small>weight: 15%</small>
+        </div>
+        <input type="range" min="0" max="100" value="75" class="sim-slider" data-weight="0.15" id="sim-4">
+        <div class="sim-value" id="sim-4-val">75%</div>
+      </div>
+      <div class="sim-total">
+        <div class="sim-total-label">Composite</div>
+        <div class="sim-total-bar"><div class="sim-total-fill" id="sim-fill"></div></div>
+        <div class="sim-total-num" id="sim-total">0%</div>
+      </div>
+      <div class="sim-note">
+        <strong>Important framing (resolved in cowork session 3):</strong> this is a
+        <em>trial-design</em> similarity engine — it answers "what other FIH trials have
+        similar <em>designs</em>." The four axes above already live as separate fields
+        in <code>SimilarityBreakdown</code>; the composite is only used as the sort key.
+        The FIH Comparator Finder will <strong>not</strong> extend this engine — instead
+        it will build a <em>new</em> drug-pharmacology similarity layer (inputs: FDA CP
+        review PDFs; axes: tox profile, ADME, target/MoA, DDI, dose-selection basis).
+        The two engines answer different questions.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== TECH STACK =========================== -->
+<section id="stack">
+  <div class="container">
+    <h2><span class="num">06</span> Tech Stack</h2>
+    <p class="section-lead">
+      The tools this app runs on. You don't need to memorize these — just recognize them when they show up.
+    </p>
+    <div class="stack-wrap">
+      <div class="stack-grid">
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div>
+          <div class="tech-name">Python</div>
+          <div class="tech-role">The programming language everything is written in.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          <div class="tech-name">FastAPI</div>
+          <div class="tech-role">Web framework. Defines URLs and handles browser requests.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div class="tech-name">Uvicorn</div>
+          <div class="tech-role">Runs the FastAPI server. The motor.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+          <div class="tech-name">Pydantic</div>
+          <div class="tech-role">Enforces data shapes so bugs fail early.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg></div>
+          <div class="tech-name">OpenAI</div>
+          <div class="tech-role">GPT-4o-mini, GPT-4o, and text embeddings.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div class="tech-name">docling</div>
+          <div class="tech-role">IBM's modern PDF parser. Preserves tables and sections.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+          <div class="tech-name">FAISS</div>
+          <div class="tech-role">Meta's fast vector search. Powers similarity lookup.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg></div>
+          <div class="tech-name">ClinicalTrials.gov</div>
+          <div class="tech-role">The NIH trial registry. Free API, no key needed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== GLOSSARY =========================== -->
+<section id="glossary">
+  <div class="container">
+    <h2><span class="num">07</span> Glossary</h2>
+    <p class="section-lead">
+      Every acronym and jargon term used in this tour. Search to filter.
+    </p>
+    <div class="glossary-wrap">
+      <input type="text" class="glossary-search" id="gloss-search" placeholder="Search terms…">
+      <div class="glossary-grid" id="gloss-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== DEV APPENDIX =========================== -->
+<section id="dev-appendix-section" style="padding-top:40px; padding-bottom:0;">
+  <div class="container">
+    <details id="dev-appendix">
+      <summary class="dev-appendix-summary">For developers: technical pipeline details (click to expand)</summary>
+      <div id="dev-appendix-content">
+        <!-- Journey, Architecture, and Similarity Calculator sections are moved here by JS -->
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- =========================== FOOTER =========================== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-brand">
+      <span class="brand-dot"></span>
+      FIH Protocol Finder
+    </div>
+    <p>
+      Built for clinical pharmacology protocol review. Source of truth: the code itself and
+      <a href="../CLAUDE.md">CLAUDE.md</a>.
+    </p>
+  </div>
+</footer>
+
+<button class="back-top" id="back-top" aria-label="Back to top">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m18 15-6-6-6 6"/>
+  </svg>
+</button>
+
+<!-- =========================== DATA + SCRIPT =========================== -->
+<script>
+/* ==========================================================================
+   DATA
+   ========================================================================== */
+
+const ICON = {
+  type: '<rect x="3" y="6" width="18" height="12" rx="2"/><line x1="7" y1="12" x2="17" y2="12"/>',
+  brain: '<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.8" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="0.8" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="0.8" fill="currentColor" stroke="none"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="10" x2="12" y2="14"/><line x1="15" y1="10" x2="12" y2="14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/>',
+  bars: '<line x1="5" y1="21" x2="5" y2="14"/><line x1="12" y1="21" x2="12" y2="8"/><line x1="19" y1="21" x2="19" y2="4"/>',
+  list: '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/>',
+  doc: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/>',
+  bubble: '<path d="M21 12a8 8 0 01-8 8H7l-4 3V8a5 5 0 015-5h8a5 5 0 015 5z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="13" y2="14"/>'
+};
+
+const STEPS = [
+  {
+    num: 1,
+    icon: ICON.type,
+    label: "You type a query",
+    file: "templates/index.html",
+    title: "The user types a search",
+    desc: "The web page is a single Jinja2 template with a text input. Whatever you type is sent to the backend as a JSON request.",
+    example: '"First in human dose escalation trials for oral small molecules, with protocol and SAP available"'
+  },
+  {
+    num: 2,
+    icon: ICON.brain,
+    label: "LLM parses your intent",
+    file: "llm_engine.py",
+    title: "An LLM extracts structure from plain English",
+    desc: "GPT-4o-mini reads your query and returns a SearchIntent object — conditions, phases, study types, required documents. If the query is ambiguous, it asks you a clarification question first.",
+    example: "→ study_types: [first in human, dose escalation], phases: [PHASE1], require_protocol: true, require_sap: true"
+  },
+  {
+    num: 3,
+    icon: ICON.search,
+    label: "Search strategies run in parallel",
+    file: "ctgov_client.py",
+    title: "Three searches hit ClinicalTrials.gov at once",
+    desc: "The app builds 3 different search queries with synonym expansion (via study_type_synonyms.py) and sends them to ClinicalTrials.gov API v2 in parallel. More queries = better recall.",
+    example: "Query A: strict match · Query B: synonym expansion · Query C: broad fallback"
+  },
+  {
+    num: 4,
+    icon: ICON.checkCircle,
+    label: "CP Agent scores each result",
+    file: "cp_agent.py",
+    title: "Rule-based clinical pharmacology scoring",
+    desc: "Every returned trial gets a 0–100 cp_score based on design keywords (50%), modality (30%), phase bonus (10%), and document availability (10%). Vaccines, devices, and topicals get filtered out.",
+    example: "FIH + SAD + oral small molecule + Phase 1 + Protocol+SAP → cp_score ≈ 95"
+  },
+  {
+    num: 5,
+    icon: ICON.bars,
+    label: "LLM re-ranks the top results",
+    file: "llm_engine.py",
+    title: "A second LLM pass sorts the finalists",
+    desc: "GPT-4o-mini reads the top candidates and re-orders them by how well each one matches your original query intent. This catches nuances the rule-based scorer misses.",
+    example: "cp_score ranks them by CP-general relevance · LLM re-rank ties them to your specific question"
+  },
+  {
+    num: 6,
+    icon: ICON.list,
+    label: "Results show in your browser",
+    file: "app.py + index.html",
+    title: "Ranked trials come back to the browser",
+    desc: "The FastAPI route returns JSON. JavaScript in index.html renders each trial as a card with NCT ID, title, CP score, and download buttons for Protocol / SAP / ICF.",
+    example: "You now see 10–20 trial cards, sorted by relevance, with document badges."
+  },
+  {
+    num: 7,
+    icon: ICON.doc,
+    label: "You click \"Preview\" on a trial",
+    file: "pdf_extractor.py",
+    title: "The protocol PDF is downloaded and parsed",
+    desc: "The PDF is pulled from ClinicalTrials.gov's CDN, then docling converts it into structured markdown — preserving headings, tables, and sections. Falls back to pdfplumber if docling fails.",
+    example: "~300 pages of PDF → clean markdown with table structure intact"
+  },
+  {
+    num: 8,
+    icon: ICON.bubble,
+    label: "LLM generates a CP assessment",
+    file: "llm_engine.py + cp_agent.py",
+    title: "An expert summary of the protocol",
+    desc: "GPT-4o (the smarter model) reads the parsed sections and produces a CP-focused summary: drug, design, PK elements, dosing schedule, enrollment, CP relevance.",
+    example: "\"Phase 1 SAD+MAD in healthy volunteers, 7 dose levels, food effect crossover, rich PK sampling on days 1 & 14…\""
+  }
+];
+
+const FILES = [
+  { abbr: "APP", color: "#0891b2", name: "app.py", role: "Web server entry point", cat: "web",
+    desc: "The file you run to start the server. Defines every URL the browser can hit and wires them to the right helpers.",
+    detail: "Uses FastAPI. Run it with <code>python3 -m uvicorn app:app --port 8000</code>. It holds the shared client instances (CTGovClient, FDAClient, LLMEngine, TrialSimilarityEngine) so they're reused across requests." },
+  { abbr: "MDL", color: "#6366f1", name: "models.py", role: "Data contracts", cat: "web",
+    desc: "Defines the 'shape' of data — what fields a StudyResult has, what a SearchIntent contains. Pydantic enforces these shapes.",
+    detail: "Catches mistakes early. If some code tries to put a string where a number should go, Pydantic raises an error instead of failing silently later." },
+  { abbr: "CTG", color: "#10b981", name: "ctgov_client.py", role: "ClinicalTrials.gov API client", cat: "web",
+    desc: "Wraps the ClinicalTrials.gov v2 API. Knows how to build search queries, parse responses, and download PDFs from the CDN.",
+    detail: "This is the only file that talks to ClinicalTrials.gov. Uses the requests library. If CT.gov changes their API, only this file needs updating." },
+  { abbr: "FDA", color: "#f59e0b", name: "fda_client.py", role: "openFDA + Drugs@FDA client", cat: "web",
+    desc: "Looks up FDA drug labels and Clinical Pharmacology review PDFs. Critical for the upcoming FIH Comparator Finder.",
+    detail: "Hits the openFDA Drug Label API plus FDA accessdata for CP review PDFs. Given a drug name, returns approval history and review documents." },
+  { abbr: "LLM", color: "#ec4899", name: "llm_engine.py", role: "Multi-provider LLM wrapper", cat: "ai",
+    desc: "A single interface to OpenAI, BullsAI (UB campus), and Anthropic. Picks the right model for each task.",
+    detail: "Uses gpt-4o-mini for cheap/fast tasks (query parsing, ranking) and gpt-4o for the expert CP assessment. Switch providers via the .env file." },
+  { abbr: "CP", color: "#ef4444", name: "cp_agent.py", role: "CP relevance scoring", cat: "cp",
+    desc: "Rule-based 0–100 score for how useful a trial is to a clinical pharmacologist. Filters out noise.",
+    detail: "Design keywords 50% (FIH/SAD/MAD/dose escalation score highest), modality 30% (oral/IV/SC highest, topicals/vaccines lowest), phase bonus 10%, document bonus 10%. Red-flags non-CP studies." },
+  { abbr: "SYN", color: "#f43f5e", name: "study_type_synonyms.py", role: "Synonym expansion", cat: "cp",
+    desc: "Maps concepts like 'first in human' to every way it might appear in a trial registry.",
+    detail: "Used by the search step to cast a wider net. 'FIH' → ['first in human', 'initial phase 1', 'single ascending dose', 'SAD', …]" },
+  { abbr: "PDF", color: "#06b6d4", name: "pdf_extractor.py", role: "PDF → structured text", cat: "pdf",
+    desc: "Uses docling (IBM) to convert protocol PDFs into clean markdown — preserving tables, sections, and headings.",
+    detail: "Falls back to pdfplumber if docling struggles. The structured output is what makes LLM summaries intelligent instead of mush." },
+  { abbr: "SIM", color: "#14b8a6", name: "similarity_engine.py", role: "Trial similarity search", cat: "similarity",
+    desc: "'Find me trials like this one.' Two entry points: by NCT ID or by free text (e.g. an uploaded candidate drug).",
+    detail: "Uses FAISS for fast vector search + OpenAI text-embedding-3-small (1536 dims). Requires a pre-built index in data/ — run build_trial_index.py once to create it." },
+  { abbr: "ONT", color: "#8b5cf6", name: "ontology_engine.py", role: "4-layer composite similarity", cat: "similarity",
+    desc: "Combines MeSH distance (25%) + drug class (30%) + FIH taxonomy (30%) + text embeddings (15%) into one score.",
+    detail: "See section 5 of this tour for the interactive calculator. The open design question: should this return per-axis scores instead of one composite?" },
+  { abbr: "FIH", color: "#d97706", name: "fih_taxonomy.py", role: "7-dimension FIH vocabulary (novel IP)", cat: "ontology",
+    desc: "Defines pk_design, modality, escalation_method, population, route, dlt_window, pd_biomarkers. Extracts tags from raw trial text via regex.",
+    detail: "This is the project's most original contribution. No published ontology captures FIH design at this granularity. See section 5 for the weights." },
+  { abbr: "DRG", color: "#a855f7", name: "drug_classes.py", role: "Drug class / mechanism mappings", cat: "ontology",
+    desc: "Maps drug names to their classes and mechanisms of action (e.g. 'pembrolizumab' → 'PD-1 inhibitor').",
+    detail: "Feeds the drug class similarity signal in ontology_engine. Currently a curated Python dict; could be swapped for a lookup API later." },
+  { abbr: "MSH", color: "#9333ea", name: "mesh_subset.py", role: "MeSH condition subset", cat: "ontology",
+    desc: "A subset of the NIH MeSH vocabulary for diseases. Used to compute 'how close are these two conditions?'",
+    detail: "Full MeSH has ~30k terms. This subset focuses on the disease areas most relevant to CP trials, keeping the comparison fast." },
+  { abbr: "IDX", color: "#3b82f6", name: "build_trial_index.py", role: "One-time FAISS index builder", cat: "similarity",
+    desc: "You run this once to build the similarity index. Pulls trials from CT.gov, embeds them, saves to data/.",
+    detail: "Run with <code>python3 build_trial_index.py</code>. Takes a while (OpenAI embedding calls). The web app loads the resulting index at startup." },
+  { abbr: "EVL", color: "#84cc16", name: "evaluation.py", role: "Automated quality metrics", cat: "eval",
+    desc: "Runs test queries through the full pipeline and measures query parsing, search recall, and CP scoring accuracy.",
+    detail: "Commands: <code>run</code>, <code>compare</code>, <code>build-ground-truth</code>, <code>gt-eval</code>. Baseline as of March 2026: 86.5% overall." }
+];
+
+const TAXONOMY = [
+  { id: "pk_design", label: "PK Design", weight: 25, color: "#0891b2",
+    desc: "The clinical pharmacology study type — what kind of PK question is this trial answering?",
+    tags: ["SAD", "MAD", "food effect", "DDI", "bioavailability", "mass balance / ADME", "QTc", "renal impairment", "hepatic impairment"] },
+  { id: "modality", label: "Modality", weight: 20, color: "#7c3aed",
+    desc: "The drug type — decides how PK behaves and what methods apply.",
+    tags: ["small molecule", "mAb", "ADC", "bispecific", "CAR-T", "siRNA", "mRNA", "peptide", "gene therapy", "PROTAC"] },
+  { id: "escalation_method", label: "Escalation Method", weight: 15, color: "#ec4899",
+    desc: "The statistical rule used to decide dose increases. Reflects risk tolerance and design sophistication.",
+    tags: ["3+3", "mTPI", "mTPI-2", "BOIN", "CRM", "EWOC", "accelerated titration", "rolling-six", "i3+3"] },
+  { id: "population", label: "Population", weight: 15, color: "#f59e0b",
+    desc: "Who's enrolling — critical for extrapolation and regulatory strategy.",
+    tags: ["healthy volunteers", "advanced/metastatic patients", "Japanese bridging", "pediatric", "elderly", "organ-impaired"] },
+  { id: "route", label: "Route", weight: 10, color: "#10b981",
+    desc: "How the drug is administered. Affects PK heavily and limits which designs make sense.",
+    tags: ["IV", "SC", "oral", "IM", "intrathecal", "inhaled", "topical", "ophthalmic"] },
+  { id: "dlt_window", label: "DLT Window", weight: 8, color: "#06b6d4",
+    desc: "The observation window for dose-limiting toxicity. Drives how fast escalation can proceed.",
+    tags: ["21-day", "28-day", "42-day", "cycle 1"] },
+  { id: "pd_biomarkers", label: "PD Biomarkers", weight: 7, color: "#8b5cf6",
+    desc: "Pharmacodynamic and target engagement readouts. Matter for MABEL-based starting doses.",
+    tags: ["receptor occupancy", "target engagement", "cytokine panel", "PK/PD modeling", "immunogenicity"] }
+];
+
+const GLOSSARY = [
+  // ── FIH essentials (first) ──
+  { term: "FIH", def: "First in Human. The very first clinical trial of a new drug in people. Usually Phase 1, dose-escalation." },
+  { term: "SAD / MAD", def: "Single Ascending Dose / Multiple Ascending Dose. The two most common FIH designs." },
+  { term: "Dose escalation", def: "A Phase 1 design where successive groups of subjects receive increasing doses to find the maximum tolerated dose (MTD) or recommended Phase 2 dose (RP2D)." },
+  { term: "CP", def: "Clinical Pharmacology. How drugs behave in the human body — PK, PD, dose selection, DDI." },
+  { term: "PK", def: "Pharmacokinetics. What the body does to the drug — absorption, distribution, metabolism, excretion." },
+  { term: "PD", def: "Pharmacodynamics. What the drug does to the body — target engagement, biomarkers, effect." },
+  { term: "DLT", def: "Dose-Limiting Toxicity. A side effect severe enough to stop dose escalation." },
+  { term: "MABEL", def: "Minimum Anticipated Biological Effect Level. An alternative to NOAEL for picking FIH starting doses." },
+  { term: "NOAEL", def: "No Observed Adverse Effect Level. The highest dose in animals where no toxicity was seen." },
+  { term: "MRSD", def: "Maximum Recommended Starting Dose. The FDA-aligned method for picking the first human dose." },
+  { term: "ADME", def: "Absorption, Distribution, Metabolism, Excretion. The four pillars of PK." },
+  { term: "DDI", def: "Drug-Drug Interaction. Studies of whether one drug alters the PK of another." },
+  { term: "Modality", def: "The 'type' of drug — small molecule, mAb, ADC, peptide, gene therapy, etc." },
+  { term: "Healthy volunteer (HV)", def: "A person without the target disease who participates in a Phase 1 trial, typically in SAD/MAD studies of non-oncology drugs." },
+  // ── General terms ──
+  { term: "SAP", def: "Statistical Analysis Plan. A pre-specified document describing how trial data will be analyzed." },
+  { term: "ICF", def: "Informed Consent Form. What subjects sign before enrolling in a trial." },
+  { term: "NCT ID", def: "ClinicalTrials.gov's unique ID for a trial (e.g. NCT03721172). NCT = National Clinical Trial." },
+  { term: "MeSH", def: "Medical Subject Headings. The NIH's controlled vocabulary for diseases and medical topics." },
+  { term: "LLM", def: "Large Language Model. GPT-4o, Claude, etc. The AI systems that parse queries and write summaries." },
+  { term: "Embedding", def: "A long list of numbers that represents the 'meaning' of text. Similar meanings → close embeddings." },
+  { term: "API", def: "Application Programming Interface. A structured way for one program to ask another for data." },
+  { term: "FAISS", def: "Facebook AI Similarity Search. Finds the closest vectors in a huge index in milliseconds." },
+  { term: "Jaccard", def: "A simple similarity measure: |A ∩ B| / |A ∪ B|. How much two sets overlap." },
+  { term: "Cosine similarity", def: "A number between -1 and 1 measuring how similar two vectors point. 1 = same direction." },
+  { term: "Ontology", def: "A formal vocabulary with relationships. The FIH taxonomy is a small domain-specific ontology." },
+  { term: "Regex", def: "Regular expression. A pattern used to find text matches — used to extract FIH design tags." },
+  { term: "openFDA", def: "The FDA's public data API. Covers drug labels, adverse events, enforcement reports." },
+  { term: "docling", def: "IBM's modern PDF-to-markdown library. Preserves tables and section structure." },
+  { term: "FastAPI", def: "A Python web framework. Defines URLs and handles HTTP requests." },
+  { term: "Uvicorn", def: "The program that runs a FastAPI app. Think of it as the motor." },
+  { term: "Pydantic", def: "A Python library that enforces data shapes at runtime. Catches bugs early." },
+  { term: ".env file", def: "A hidden text file holding API keys. Never committed to git." }
+];
+
+/* ==========================================================================
+   RENDER: Query Journey
+   ========================================================================== */
+const stepsEl = document.getElementById('journey-steps');
+const detailEl = document.getElementById('step-detail');
+
+STEPS.forEach((s, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'step' + (i === 0 ? ' active' : '');
+  btn.dataset.idx = i;
+  btn.innerHTML = `
+    <div class="step-num">${s.num}</div>
+    <div class="step-icon"><svg viewBox="0 0 24 24">${s.icon}</svg></div>
+    <div class="step-label">${s.label}</div>
+  `;
+  btn.addEventListener('click', () => selectStep(i));
+  stepsEl.appendChild(btn);
+});
+
+function selectStep(i) {
+  document.querySelectorAll('.step').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  const s = STEPS[i];
+  detailEl.innerHTML = `
+    <div class="step-detail-num">${String(s.num).padStart(2, '0')}</div>
+    <div class="step-detail-content">
+      <div class="file-badge">${s.file}</div>
+      <h3>${s.title}</h3>
+      <p>${s.desc}</p>
+      <div class="example">${s.example}</div>
+    </div>
+  `;
+}
+selectStep(0);
+
+/* ==========================================================================
+   RENDER: File Grid
+   ========================================================================== */
+const gridEl = document.getElementById('file-grid');
+
+FILES.forEach((f, i) => {
+  const tile = document.createElement('div');
+  tile.className = 'file-tile';
+  tile.style.setProperty('--tile-color', f.color);
+  tile.dataset.cat = f.cat;
+  tile.innerHTML = `
+    <div class="file-header">
+      <div class="file-badge-icon">${f.abbr}</div>
+      <div>
+        <div class="file-name">${f.name}</div>
+        <div class="file-role">${f.role}</div>
+      </div>
+    </div>
+    <p class="file-desc">${f.desc}</p>
+    <div class="expand-content">
+      <p>${f.detail}</p>
+    </div>
+  `;
+  tile.addEventListener('click', () => tile.classList.toggle('expanded'));
+  gridEl.appendChild(tile);
+});
+
+// Filter pills
+document.querySelectorAll('#file-filters .pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#file-filters .pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    document.querySelectorAll('.file-tile').forEach(tile => {
+      tile.classList.toggle('hidden', f !== 'all' && tile.dataset.cat !== f);
+    });
+  });
+});
+
+/* ==========================================================================
+   RENDER: FIH Taxonomy Donut
+   ========================================================================== */
+const donutSvg = document.getElementById('donut-svg');
+const taxDetail = document.getElementById('tax-detail');
+const DONUT_R = 80;
+const DONUT_CX = 120;
+const DONUT_CY = 120;
+const DONUT_C = 2 * Math.PI * DONUT_R;
+let offset = 0;
+
+TAXONOMY.forEach((t, i) => {
+  const length = (t.weight / 100) * DONUT_C;
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', DONUT_CX);
+  circle.setAttribute('cy', DONUT_CY);
+  circle.setAttribute('r', DONUT_R);
+  circle.setAttribute('fill', 'none');
+  circle.setAttribute('stroke', t.color);
+  circle.setAttribute('stroke-width', 32);
+  circle.setAttribute('stroke-dasharray', `${length - 2} ${DONUT_C - length + 2}`);
+  circle.setAttribute('stroke-dashoffset', -offset);
+  circle.setAttribute('transform', `rotate(-90 ${DONUT_CX} ${DONUT_CY})`);
+  circle.classList.add('donut-segment');
+  circle.dataset.idx = i;
+  circle.addEventListener('click', () => selectTax(i));
+  circle.addEventListener('mouseenter', () => selectTax(i));
+  donutSvg.insertBefore(circle, donutSvg.firstChild);
+  offset += length;
+});
+
+function selectTax(i) {
+  document.querySelectorAll('.donut-segment').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  const t = TAXONOMY[i];
+  document.getElementById('donut-center-num').textContent = t.weight + '%';
+  document.getElementById('donut-center-label').textContent = t.label.toUpperCase();
+  taxDetail.style.setProperty('--tile-color', t.color);
+  taxDetail.innerHTML = `
+    <h3>
+      <span style="color:${t.color}">${t.label}</span>
+      <span class="weight-big">${t.weight}%</span>
+    </h3>
+    <p>${t.desc}</p>
+    <div class="tags">
+      ${t.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+    </div>
+  `;
+}
+selectTax(0);
+
+/* ==========================================================================
+   RENDER: Similarity Calculator
+   ========================================================================== */
+function updateSim() {
+  let total = 0;
+  for (let i = 1; i <= 4; i++) {
+    const slider = document.getElementById('sim-' + i);
+    const val = parseInt(slider.value);
+    const w = parseFloat(slider.dataset.weight);
+    document.getElementById('sim-' + i + '-val').textContent = val + '%';
+    total += val * w;
+  }
+  document.getElementById('sim-total').textContent = Math.round(total) + '%';
+  document.getElementById('sim-fill').style.width = total + '%';
+}
+document.querySelectorAll('.sim-slider').forEach(s => s.addEventListener('input', updateSim));
+updateSim();
+
+/* ==========================================================================
+   RENDER: Glossary
+   ========================================================================== */
+const glossGrid = document.getElementById('gloss-grid');
+GLOSSARY.forEach(g => {
+  const card = document.createElement('div');
+  card.className = 'gloss-card';
+  card.innerHTML = `
+    <div class="gloss-term">${g.term}</div>
+    <p class="gloss-def">${g.def}</p>
+  `;
+  glossGrid.appendChild(card);
+});
+document.getElementById('gloss-search').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.gloss-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.classList.toggle('hidden', q && !text.includes(q));
+  });
+});
+
+/* ==========================================================================
+   Top nav active section + back to top
+   ========================================================================== */
+const sections = document.querySelectorAll('section[id], header.hero');
+const navLinks = document.querySelectorAll('.topnav-links a');
+const backTop = document.getElementById('back-top');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px' });
+
+sections.forEach(s => { if (s.id) observer.observe(s); });
+
+window.addEventListener('scroll', () => {
+  backTop.classList.toggle('visible', window.scrollY > 600);
+});
+backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+/* ==========================================================================
+   Hero pipeline sequential glow
+   ========================================================================== */
+const nodes = document.querySelectorAll('.hero-pipeline .node');
+let active = 0;
+setInterval(() => {
+  nodes.forEach((n, i) => n.classList.toggle('glow', i === active));
+  active = (active + 1) % nodes.length;
+}, 900);
+
+/* ==========================================================================
+   Architecture figure tabs (A/B/C/D)
+   ========================================================================== */
+document.querySelectorAll('#arch-tabs .arch-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('#arch-tabs .arch-tab').forEach(b => {
+      b.classList.toggle('active', b === btn);
+    });
+    document.querySelectorAll('.arch-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.tab === target);
+    });
+  });
+});
+
+/* ==========================================================================
+   Move old sections (journey, architecture, similarity) into dev-appendix
+   ========================================================================== */
+(function() {
+  const appendixContent = document.getElementById('dev-appendix-content');
+  const journeySection = document.getElementById('journey');
+  const archSection = document.getElementById('architecture');
+  const simSection = document.getElementById('similarity');
+  if (appendixContent && journeySection) appendixContent.appendChild(journeySection);
+  if (appendixContent && archSection) appendixContent.appendChild(archSection);
+  if (appendixContent && simSection) appendixContent.appendChild(simSection);
+})();
+
+/* ==========================================================================
+   RENDER: Heatmap (section 02 — similarity metric)
+   ========================================================================== */
+(function() {
+  const heatmapEl = document.getElementById('sm-heatmap');
+  if (!heatmapEl) return;
+
+  const labels = ["Edaravone (ALS)", "Emodepside (Filariasis)", "Danirixin (COPD)", "TB006 (Alzheimer)", "AOC 1001 (DM1)", "AXER-204 (SCI)"];
+  const matrix = [
+    [1.0, 0.49, 0.46, 0.45, 0.43, 0.39],
+    [0.49, 1.0, 0.52, 0.39, 0.45, 0.41],
+    [0.46, 0.52, 1.0, 0.37, 0.42, 0.42],
+    [0.45, 0.39, 0.37, 1.0, 0.42, 0.38],
+    [0.43, 0.45, 0.42, 0.42, 1.0, 0.50],
+    [0.39, 0.41, 0.42, 0.38, 0.50, 1.0]
+  ];
+
+  function scoreToColor(v) {
+    // 0.35 -> light, 1.0 -> dark purple
+    const t = Math.max(0, Math.min(1, (v - 0.30) / 0.70));
+    const r = Math.round(241 - t * 117);
+    const g = Math.round(245 - t * 187);
+    const b = Math.round(249 - t * 12);
+    if (t > 0.5) {
+      const t2 = (t - 0.5) * 2;
+      return `rgb(${Math.round(8 + (124 - 8) * (1 - t2))}, ${Math.round(145 * (1 - t2) + 58 * t2)}, ${Math.round(178 * (1 - t2) + 237 * t2)})`;
+    }
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // Top-left empty corner
+  heatmapEl.innerHTML = '<div></div>';
+
+  // Top labels
+  labels.forEach(l => {
+    const el = document.createElement('div');
+    el.className = 'sm-heatmap-label-top';
+    el.textContent = l;
+    heatmapEl.appendChild(el);
+  });
+
+  // Rows
+  matrix.forEach((row, ri) => {
+    // Row label
+    const rl = document.createElement('div');
+    rl.className = 'sm-heatmap-label';
+    rl.textContent = labels[ri];
+    heatmapEl.appendChild(rl);
+
+    row.forEach((val, ci) => {
+      const cell = document.createElement('div');
+      cell.className = 'sm-heatmap-cell' + (ri === ci ? ' diag' : '');
+      cell.textContent = Math.round(val * 100) + '%';
+      cell.style.background = scoreToColor(val);
+      cell.title = labels[ri] + ' vs ' + labels[ci] + ': ' + Math.round(val * 100) + '%';
+      heatmapEl.appendChild(cell);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
